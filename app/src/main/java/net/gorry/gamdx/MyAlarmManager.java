@@ -13,9 +13,18 @@ import android.util.Log;
  *
  */
 public class MyAlarmManager extends BroadcastReceiver {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "AlarmManagerReceiver";
-	//private static final boolean V = false;
+	private static final boolean T = true; //false;
+	private static final boolean V = false;
 	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private static final boolean DISABLE = true;
 
@@ -42,21 +51,27 @@ public class MyAlarmManager extends BroadcastReceiver {
 	 */
 	@SuppressWarnings("unused")
 	public static void setAlarmManager(final Context context, final Runnable run) {
-		if (D) Log.d(TAG, "setAlarmManager()");
+		if (T) Log.v(TAG, M()+"@in: context="+context+", run="+run);
+
 		if (DISABLE) {
 			resetAlarmManager(context);
+			if (T) Log.v(TAG, M()+"@out: DISABLED");
 			return;
 		}
-		if (mAlarmManager == null) {
-			mRunnable = run;
-			final Intent intent = new Intent(context, MyAlarmManager.class);
-			final PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
-			long firstTime = SystemClock.elapsedRealtime();
-			firstTime += 60 * 1000;
-			mAlarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
-			mAlarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, firstTime, 60 * 1000, sender);
-			if (D) Log.d(TAG, "setAlarmManager(): set alarm");
+		if (mAlarmManager != null) {
+			if (T) Log.v(TAG, M()+"@out: already set alarm");
+			return;
 		}
+
+		mRunnable = run;
+		final Intent intent = new Intent(context, MyAlarmManager.class);
+		final PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+		long firstTime = SystemClock.elapsedRealtime();
+		firstTime += 60 * 1000;
+		mAlarmManager = (AlarmManager)context.getSystemService(Context.ALARM_SERVICE);
+		mAlarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, firstTime, 60 * 1000, sender);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -64,7 +79,8 @@ public class MyAlarmManager extends BroadcastReceiver {
 	 * @param context context
 	 */
 	public static void resetAlarmManager(final Context context) {
-		if (D) Log.d(TAG, "resetAlarmManager()");
+		if (T) Log.v(TAG, M()+"@in: context="+context);
+
 		// if (mAlarmManager != null) {
 		final Intent intent = new Intent(context, MyAlarmManager.class);
 		final PendingIntent sender = PendingIntent.getBroadcast(context, 0, intent, PendingIntent.FLAG_IMMUTABLE);
@@ -74,6 +90,9 @@ public class MyAlarmManager extends BroadcastReceiver {
 		if (D) Log.d(TAG, "resetAlarmManager(): reset alarm");
 		// }
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 }
+
+// [EOF]

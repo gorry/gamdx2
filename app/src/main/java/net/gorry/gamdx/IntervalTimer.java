@@ -16,8 +16,18 @@ import android.util.Log;
  *
  */
 public class IntervalTimer {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "IntervalTimer";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private boolean mTimerStop = false;
 	private static final long mTimerStep = 100;
@@ -31,6 +41,8 @@ public class IntervalTimer {
 	public final Handler mTimerHandler = new Handler() {
 		@Override
 		public void handleMessage(final Message msg) {
+			if (T) Log.v(TAG, M()+"@in: msg="+msg);
+
 			if (msg.what == TIMER) {
 				while (SystemClock.uptimeMillis() > mTimerNext) {
 					mTimerNext += mTimerStep;
@@ -42,6 +54,8 @@ public class IntervalTimer {
 					sendMessageAtTime(msg2, mTimerNext);
 				}
 			}
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 	};
 
@@ -49,19 +63,25 @@ public class IntervalTimer {
 	 * タイマ開始
 	 */
 	public void startTimer() {
-		if (V) Log.v(TAG, "startTimer()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		mTimerStop = false;
 		mTimerNext = SystemClock.uptimeMillis();
 		final Message msg = mTimerHandler.obtainMessage(TIMER);
 		mTimerHandler.sendMessageAtTime(msg, mTimerNext+mTimerStep);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * タイマ停止
 	 */
 	public void stopTimer() {
-		if (V) Log.v(TAG, "stopTimer()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		mTimerStop = true;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -69,7 +89,9 @@ public class IntervalTimer {
 	 * @return タイマ値
 	 */
 	public long getTimerCount() {
-		if (V) Log.v(TAG, "getTimerCount()");
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (T) Log.v(TAG, M()+"@out: mTimerCount="+mTimerCount);
 		return mTimerCount;
 	}
 
@@ -78,7 +100,9 @@ public class IntervalTimer {
 	 * @param timerCount タイマ値
 	 */
 	public void onTimer(final long timerCount) {
-		if (V) Log.v(TAG, "onTimer()");
+		if (T) Log.v(TAG, M()+"@in: timerCount="+timerCount);
+
+		if (T) Log.v(TAG, M()+"@out");
 		//
 	}
 

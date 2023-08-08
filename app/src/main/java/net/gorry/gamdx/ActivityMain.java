@@ -31,8 +31,18 @@ import android.view.MenuItem;
  *
  */
 public class ActivityMain extends Activity {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "ActivityMain";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	/** */
 	public static final int ACTIVITY_SETTING = 1;
@@ -64,8 +74,11 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	protected void onSaveInstanceState(final Bundle outState) {
-		if (V) Log.v(TAG, "onSaveInstanceState()");
+		if (T) Log.v(TAG, M()+"@in: outState="+outState);
+
 		layout.saveInstanceState(outState);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -74,11 +87,12 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	protected void onRestoreInstanceState(final Bundle savedInstanceState) {
-		if (V) Log.v(TAG, "onRestoreInstanceState()");
+		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
+
 		layout.restoreInstanceState(savedInstanceState);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
-
-
 
 	/*
 	 * 作成
@@ -86,7 +100,8 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onCreate(final Bundle savedInstanceState) {
-		if (V) Log.v(TAG, "onCreate()");
+		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
+
 		super.onCreate(savedInstanceState);
 		me = this;
 		setTitle(R.string.activitymain_title);
@@ -108,6 +123,8 @@ public class ActivityMain extends Activity {
 		if (intent != null) {
 			mStartIntent = intent;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -116,9 +133,11 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onRestart() {
-		if (V) Log.v(TAG, "onRestart()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onRestart();
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -127,10 +146,13 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onNewIntent(final Intent intent) {
-		if (V) Log.v(TAG, "onNewIntent()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent);
+
 		super.onNewIntent(intent);
 
 		mStartIntent = intent;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -139,13 +161,19 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onStart() {
-		if (V) Log.v(TAG, "onStart()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onStart();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	private void afterSetupService() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		layout.musicInfoLayout_Update();
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -154,10 +182,13 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onResume() {
-		if (V) Log.v(TAG, "onResume()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onResume();
 
 		resume_iMusicPlayerService();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -166,7 +197,8 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public synchronized void onPause() {
-		if (V) Log.v(TAG, "onPause()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onPause();
 		try {
 			resume_iMusicPlayerService();
@@ -174,8 +206,10 @@ public class ActivityMain extends Activity {
 				iMusicPlayerService.savePlayerStatus();
 			}
 		} catch (final RemoteException e) {
-			//
+			e.printStackTrace();
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -184,7 +218,8 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onStop() {
-		if (V) Log.v(TAG, "onStop()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onStop();
 		if (mShutdownServiceOnDestroy) {
 			mShutdownServiceOnDestroy = false;
@@ -196,10 +231,12 @@ public class ActivityMain extends Activity {
 				}
 			}
 			catch(final RemoteException e) {
-				// エラー
+				e.printStackTrace();
 			}
 			unbindService(svcMusicPlayer);
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	//
@@ -209,8 +246,11 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onDestroy() {
-		if (V) Log.v(TAG, "onDestroy()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onDestroy();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -219,7 +259,8 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public synchronized void onConfigurationChanged(final Configuration newConfig) {
-		if (V) Log.v(TAG, "onConfigurationChanged()");
+		if (T) Log.v(TAG, M()+"@in: newConfig="+newConfig);
+
 		super.onConfigurationChanged(newConfig);
 
 		final ProgressDialog pd = new ProgressDialog(me);
@@ -227,34 +268,44 @@ public class ActivityMain extends Activity {
 		final Runnable dismissProgressDialog = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "onConfigurationChanged(): dismissProgressDialog");
+				if (T) Log.v(TAG, M()+"@in");
+
 				pd.dismiss();
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 
 		final Runnable doChangeConfiguration = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "onConfigurationChanged(): doChangeConfiguration");
+				if (T) Log.v(TAG, M()+"@in");
+
 				layout.changeConfiguration(newConfig);
 				h.post(dismissProgressDialog);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 
 		final Runnable showProgressDialog = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "onConfigurationChanged(): showProgressDialog");
+				if (T) Log.v(TAG, M()+"@in");
+
 				pd.setTitle(getString(R.string.activitymain_java_progress_changeconfiguration));
 				pd.setIndeterminate(true);
 				pd.setCancelable(false);
 				pd.show();
 				h.post(doChangeConfiguration);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 
 		h.post(showProgressDialog);
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -264,21 +315,27 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public synchronized void onWindowFocusChanged(final boolean b) {
-		if (V) Log.v(TAG, "onWindowFocusChanged()");
+		if (T) Log.v(TAG, M()+"@in: b="+b);
+
 		layout.updateBaseLayout();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 音楽プレイヤーサービスへのバインド
 	 */
 	private void myBindService() {
-		if (V) Log.v(TAG, "myBindService()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		final Intent i1 = new Intent(this, MusicPlayerService.class);
 		startService(i1);
 		final Intent i2 = new Intent(IMusicPlayerService.class.getName());
 		final String pkgname = me.getPackageName();
 		i2.setPackage(pkgname);
 		bindService(i2, svcMusicPlayer, BIND_AUTO_CREATE);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -287,17 +344,21 @@ public class ActivityMain extends Activity {
 	private final ServiceConnection svcMusicPlayer = new ServiceConnection() {
 		@Override
 		public void onServiceConnected(final ComponentName name, final IBinder service) {
-			if (V) Log.v(TAG, "svcMusicPlayer: onServiceConnected()");
+			if (T) Log.v(TAG, M()+"@in: service="+service);
+
 			final IMusicPlayerService i = IMusicPlayerService.Stub.asInterface(service);
-			if (V) Log.v(TAG, "svcMusicPlayer: iMusicPlayerService loaded");
+			if (V) Log.v(TAG, M()+"iMusicPlayerService loaded");
 			iMusicPlayerService = i;
-			// mSignaliIRCServiceSetup.countDown();
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 		@Override
 		public void onServiceDisconnected(final ComponentName name) {
-			if (V) Log.v(TAG, "svcMusicPlayer: onServiceDisconnected()");
+			if (T) Log.v(TAG, M()+"@in: name="+name);
+
 			iMusicPlayerService = null;
-			// layout.setIIRCService(iIRCService);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 	};
 
@@ -305,9 +366,12 @@ public class ActivityMain extends Activity {
 	 * 音楽プレイヤーサービスのブロードキャストレシーバー登録
 	 */
 	private void myRegisterReceiver() {
-		if (V) Log.v(TAG, "myRegisterReceiver()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		final IntentFilter filter = new IntentFilter(MusicPlayerService.ACTION);
 		registerReceiver(mReceiver, filter);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -316,6 +380,8 @@ public class ActivityMain extends Activity {
 	public class MusicPlayerServiceReceiver extends BroadcastReceiver {
 		@Override
 		public synchronized void onReceive(final Context context, final Intent intent) {
+			if (T) Log.v(TAG, M()+"@in: context="+context+", intent="+intent);
+
 			final Bundle extras = intent.getExtras();
 			final int msg = extras.getInt("msg");
 			switch (msg) {
@@ -338,10 +404,12 @@ public class ActivityMain extends Activity {
 
 				default:
 				{
-					if (V) Log.v(TAG, "MusicPlayerServiceReceiver: unknown message: " + msg);
+					if (V) Log.v(TAG, M()+"unknown message: " + msg);
 					break;
 				}
 			}
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 	}
 
@@ -349,7 +417,7 @@ public class ActivityMain extends Activity {
 	 * iMusicPlayerServiceの再読み込み
 	 */
 	public void resume_iMusicPlayerService() {
-		if (V) Log.v(TAG, "resume_iMusicPlayerService()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		final ProgressDialog pd = new ProgressDialog(me);
 		final Handler h = new Handler();
@@ -357,71 +425,91 @@ public class ActivityMain extends Activity {
 		final Runnable dismissProgressDialog = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): dismissProgressDialog");
+				if (T) Log.v(TAG, M()+"@in");
 				pd.dismiss();
 
 				if (mStartIntent != null) {
 					onMyNewIntent(mStartIntent);
 					mStartIntent = null;
 				}
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 		final Runnable postSetupService = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): postSetupService");
+				if (T) Log.v(TAG, M()+"@in");
+
 				afterSetupService();
 				h.post(dismissProgressDialog);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 		final Runnable waitSetupService = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): waitSetupService");
-				new Thread(new Runnable() {	@Override
+				if (T) Log.v(TAG, M()+"@in");
+
+				new Thread(new Runnable() {
+					@Override
 					public void run() {
-					int count;
-					for (count=0; count<100; count++) {
-						if (iMusicPlayerService != null) break;
-						try {
-							Thread.sleep(200);
-							// mSignaliIRCServiceSetup.await();
-						} catch (final InterruptedException e) {
-							//
+						if (T) Log.v(TAG, M()+"@in");
+
+						int count;
+						for (count=0; count<100; count++) {
+							if (iMusicPlayerService != null) break;
+							try {
+								Thread.sleep(200);
+								// mSignaliIRCServiceSetup.await();
+							} catch (final InterruptedException e) {
+								//
+							}
 						}
+						if (count >= 100) {
+							h.post(setupService[0]);
+						} else {
+							h.post(postSetupService);
+						}
+
+						if (T) Log.v(TAG, M()+"@out");
 					}
-					if (count >= 100) {
-						h.post(setupService[0]);
-					} else {
-						h.post(postSetupService);
-					}
-				}} ).start();
+				} ).start();
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 		setupService[0] = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): setupService");
+				if (T) Log.v(TAG, M()+"@in");
+
 				myBindService();
 				myRegisterReceiver();
 				h.post(waitSetupService);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 		final Runnable showProgressDialog = new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): showProgressDialog");
+				if (T) Log.v(TAG, M()+"@in");
+
 				pd.setTitle(getString(R.string.activitymain_java_progress_bindservice));
 				pd.setIndeterminate(true);
 				pd.setCancelable(false);
 				pd.show();
 				h.post(setupService[0]);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 		if (iMusicPlayerService != null) {
 			try {
 				// サービス生存確認
-				if (V) Log.v(TAG, "resume_iMusicPlayerService(): check Service");
+				if (V) Log.v(TAG, M()+"check Service");
 				final String packageName = getPackageName();
 				final PackageInfo packageInfo = getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
 				final String version = packageInfo.versionName;
@@ -435,9 +523,11 @@ public class ActivityMain extends Activity {
 				iMusicPlayerService = null;
 			}
 		} else {
-			if (V) Log.v(TAG, "resume_iMusicPlayerService(): service is not alive");
+			if (V) Log.v(TAG, M()+"service is not alive");
 		}
 		h.post(showProgressDialog);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 
@@ -448,9 +538,12 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public boolean onCreateOptionsMenu(final Menu menu) {
-		if (V) Log.v(TAG, "onCreateOptionMenu()");
+		if (T) Log.v(TAG, M()+"@in: menu="+menu);
+
 		final MenuInflater inflater = getMenuInflater();
 		inflater.inflate(R.menu.activitymain, menu);
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
@@ -460,33 +553,40 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public boolean onOptionsItemSelected(final MenuItem item) {
-		if (V) Log.v(TAG, "onOptionsItemSelected()");
+		if (T) Log.v(TAG, M()+"@in: item="+item);
+
 		switch (item.getItemId()) {
 			case R.id.help:
 			{
 				doMain.doShowHelp();
+				if (T) Log.v(TAG, M()+"@out");
 				return true;
 			}
 
 			case R.id.version:
 			{
 				doMain.doShowVersion();
+				if (T) Log.v(TAG, M()+"@out");
 				return true;
 			}
 
 			case R.id.quit:
 			{
 				doMain.doQuit();
+				if (T) Log.v(TAG, M()+"@out");
 				return true;
 			}
 
 			case R.id.setting:
 			{
 				doMain.doSetting();
+				if (T) Log.v(TAG, M()+"@out");
 				return true;
 			}
 
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 		return false;
 	}
 
@@ -496,6 +596,8 @@ public class ActivityMain extends Activity {
 	 */
 	@Override
 	public void onActivityResult(final int requestCode, final int resultCode, final Intent data) {
+		if (T) Log.v(TAG, M()+"@in: requestCode="+requestCode+", resultCode="+resultCode+", data="+data);
+
 		super.onActivityResult(requestCode, resultCode, data);
 		if (V) Log.v(TAG, "onActivityResult()");
 
@@ -512,14 +614,14 @@ public class ActivityMain extends Activity {
 
 		switch (requestCode) {
 			case ACTIVITY_SETTING:
-				if (V) Log.v(TAG, "onActivityResult(): ACTIVITY_SETTING");
+				if (V) Log.v(TAG, M()+"ACTIVITY_SETTING");
 				if (intentResult >= 0) {
 					net.gorry.gamdx.Setting.load();
 				}
 				break;
 
 			case ACTIVITY_SELECT_MDX:
-				if (V) Log.v(TAG, "onActivityResult(): ACTIVITY_SELECT_MDX");
+				if (V) Log.v(TAG, M()+"ACTIVITY_SELECT_MDX");
 				if (extras != null) {
 					final String path = extras.getString("path");
 					@SuppressWarnings("unused")
@@ -545,6 +647,8 @@ public class ActivityMain extends Activity {
 				}
 				break;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -552,7 +656,8 @@ public class ActivityMain extends Activity {
 	 * @param intent Intent
 	 */
 	public void onMyNewIntent(final Intent intent) {
-		if (V) Log.v(TAG, "onMyNewIntent()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent);
+
 		final Bundle extras = intent.getExtras();
 		if (extras != null) {  // 追加項目あり
 			if (intent.getAction().equals(Intent.ACTION_VIEW)) {  // ACTION_VIEW
@@ -583,7 +688,10 @@ public class ActivityMain extends Activity {
 				}
 			}
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
-
 }
+
+// [EOF]

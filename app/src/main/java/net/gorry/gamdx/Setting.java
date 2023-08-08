@@ -16,8 +16,18 @@ import android.util.Log;
  *
  */
 public class Setting {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "Setting";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private static Context me = null;
 	private static boolean isLandscape = false;
@@ -51,7 +61,7 @@ public class Setting {
 	 * 設定消去
 	 */
 	public static void delete() {
-		if (V) Log.v(TAG, "delete()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		final SharedPreferences pref = me.getSharedPreferences("setting", 0);
 		final SharedPreferences.Editor editor = pref.edit();
@@ -66,13 +76,15 @@ public class Setting {
 		editor.remove(name_bufferSize);
 
 		editor.commit();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 設定を読み込む
 	 */
 	public static void load() {
-		if (V) Log.v(TAG, "load()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		final SharedPreferences pref = me.getSharedPreferences("setting", 0);
 
@@ -95,12 +107,15 @@ public class Setting {
 
 		setOrientation(isLandscape);
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * mdxRootPathの内容チェック
 	 */
 	public static void checkMdxRootPath() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		if (mdxRootPath.length() == 0) {
 			// 空のときは初期値に戻す
 			mdxRootPath = mDefMdxRootPath;
@@ -108,15 +123,15 @@ public class Setting {
 			// "/"で終わってなかったら追加
 			mdxRootPath += "/";
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 設定を保存する
 	 */
 	public static void save() {
-		if (V) Log.v(TAG, "save()");
-
-		if (V) Log.v(TAG, "saveConfig()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		final SharedPreferences pref = me.getSharedPreferences("setting", 0);
 		final SharedPreferences.Editor editor = pref.edit();
@@ -131,6 +146,8 @@ public class Setting {
 		editor.putInt(name_bufferSize, bufferSize);
 
 		editor.commit();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -138,9 +155,13 @@ public class Setting {
 	 * @param context コンテキスト
 	 */
 	public static void setContext(final Context context) {
+		if (T) Log.v(TAG, M()+"@out: context="+context);
+
 		if (me == null) {
 			me = context;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -148,12 +169,16 @@ public class Setting {
 	 * @param orientation 横長ならtrue
 	 */
 	public static void setOrientation(final boolean orientation) {
+		if (T) Log.v(TAG, M()+"@in: orientation="+orientation);
+
 		isLandscape = orientation;
 		if (isLandscape) {
 			//
 		} else {
 			//
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -161,6 +186,7 @@ public class Setting {
 	 * @return 回転方向 横長ならtrue
 	 */
 	public static boolean getOrientation() {
+		if (T) Log.v(TAG, M()+"@out: isLandscape="+isLandscape);
 		return isLandscape;
 	}
 
@@ -170,7 +196,7 @@ public class Setting {
 	 * @return リブートレベル（bit0=要画面再構成、bit1=要サービス再起動、bit2=ログクリア）
 	 */
 	public static int getFromPreferenceActivity(final SharedPreferences sp) {
-		if (V) Log.v(TAG, "getFromForPreferenceActivity()");
+		if (T) Log.v(TAG, M()+"@in: sp="+sp);
 
 		int rebootLevel = 0;
 
@@ -202,8 +228,10 @@ public class Setting {
 		if (back_verbose != verbose) rebootLevel |= 2;
 		if (back_rotateMode != rotateMode) rebootLevel |= 1;
 
+		if (T) Log.v(TAG, M()+"@out: rebootLevel="+rebootLevel);
 		return rebootLevel;
 	}
+
 	private static int sp_getInt(final SharedPreferences sp, final String reg, final int defparam) {
 		return Integer.valueOf(sp.getString(reg, Integer.toString(defparam)));
 	}
@@ -219,8 +247,7 @@ public class Setting {
 	 * @param sp 情報入出力先
 	 */
 	public static void setForPreferenceActivity(final SharedPreferences sp) {
-		if (V) Log.v(TAG, "setForPreferenceActivity()");
-
+		if (T) Log.v(TAG, M()+"@in: sp="+sp);
 
 		final SharedPreferences.Editor spe = sp.edit();
 
@@ -234,7 +261,10 @@ public class Setting {
 		spe_putInt(spe, "pref_"+name_bufferSize, bufferSize);
 
 		spe.commit();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
+
 	private static void spe_putInt(final Editor spe, final String reg, final int param) {
 		spe.putString(reg, Integer.toString(param));
 	}
@@ -250,7 +280,7 @@ public class Setting {
 	 * @param sp 情報入出力先
 	 */
 	public static void clearForPreferenceActivity(final SharedPreferences sp) {
-		if (V) Log.v(TAG, "clearForPreferenceActivity()");
+		if (T) Log.v(TAG, M()+"@in: sp="+sp);
 
 		final SharedPreferences.Editor spe = sp.edit();
 
@@ -264,7 +294,10 @@ public class Setting {
 		spe.remove("pref_"+name_bufferSize);
 
 		spe.commit();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
-
 }
+
+// [EOF]

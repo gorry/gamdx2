@@ -21,8 +21,19 @@ import android.widget.TextView;
  *
  */
 public class Layout {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "Layout";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
+
 	private static final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
 	private static final int FP = ViewGroup.LayoutParams.FILL_PARENT;
 	private final ActivityMain me;
@@ -44,7 +55,11 @@ public class Layout {
 	 * @param a アクティビティインスタンス
 	 */
 	Layout(final ActivityMain a) {
+		if (T) Log.v(TAG, M()+"@in: a="+a);
+
 		me = a;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -52,7 +67,9 @@ public class Layout {
 	 * @param outState 退避先
 	 */
 	public void saveInstanceState(final Bundle outState) {
-		if (V) Log.v(TAG, "saveInstanceState()");
+		if (T) Log.v(TAG, M()+"@in: outState="+outState);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -60,8 +77,11 @@ public class Layout {
 	 * @param savedInstanceState 復元元
 	 */
 	public void restoreInstanceState(final Bundle savedInstanceState) {
-		if (V) Log.v(TAG, "restoreInstanceState()");
+		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
+
 		mNotRestore = false;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -70,7 +90,8 @@ public class Layout {
 	 * @return 回転方向が変わったらtrue
 	 */
 	public boolean setOrientation(final boolean isFirst) {
-		if (V) Log.v(TAG, "setOrientation()");
+		if (T) Log.v(TAG, M()+"@in: isFirst="+isFirst);
+
 		final boolean lastOrientation = Setting.getOrientation();
 		final boolean isLandscape = (me.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 		switch (Setting.rotateMode) {
@@ -90,14 +111,18 @@ public class Layout {
 				break;
 		}
 		final boolean nowOrientation = Setting.getOrientation();
-		return (lastOrientation != nowOrientation);
+		final boolean ret = (lastOrientation != nowOrientation);
+
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
 	 * 回転モードの設定
 	 */
 	public void setRotateMode() {
-		if (V) Log.v(TAG, "setRotateMode()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		final boolean isLandscape = Setting.getOrientation();
 		switch (Setting.rotateMode) {
 			default:
@@ -118,13 +143,17 @@ public class Layout {
 				me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 				break;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * ベースレイアウトのアップデート
 	 */
 	public void updateBaseLayout() {
-		if (V) Log.v(TAG, "updateBaseLayout()");
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -132,7 +161,8 @@ public class Layout {
 	 * @param isFirst 最初ならtrue
 	 */
 	public synchronized void baseLayout_Create(final boolean isFirst) {
-		if (V) Log.v(TAG, "baseLayout_Create()");
+		if (T) Log.v(TAG, M()+"@in: isFirst="+isFirst);
+
 		if (mBaseLayout != null) {
 			mBaseLayout.removeAllViews();
 		} else {
@@ -150,6 +180,7 @@ public class Layout {
 		musicInfoLayout_Create(mBaseLayout, isFirst);
 		musicPlayerUILayout_Create(mBaseLayout, isFirst);
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -157,7 +188,8 @@ public class Layout {
 	 * @param newConfig 新内容
 	 */
 	public synchronized void changeConfiguration(final Configuration newConfig) {
-		if (V) Log.v(TAG, "onConfigurationChanged()");
+		if (T) Log.v(TAG, M()+"@in: newConfig="+newConfig);
+
 		final boolean isChanged = setOrientation(false);
 		if (isChanged) {
 			setRotateMode();
@@ -168,13 +200,16 @@ public class Layout {
 			}
 		}
 		mBaseLayout.requestLayout();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * レイアウトの再作成処理
 	 */
 	public synchronized void rebootLayout() {
-		if (V) Log.v(TAG, "rebootLayout()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		final boolean isChanged = setOrientation(true);
 		if (isChanged || (Setting.rotateMode == 0)) {
 			setRotateMode();
@@ -183,6 +218,8 @@ public class Layout {
 				//
 			}
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 
@@ -201,8 +238,7 @@ public class Layout {
 	 * @param isFirst 最初ならtrue
 	 */
 	public void musicInfoLayout_Create(final LinearLayout baseLayout, final boolean isFirst) {
-		if (V) Log.v(TAG, "musicInfoLayout_Create()");
-
+		if (T) Log.v(TAG, M()+"@in: baseLayout="+baseLayout+", isFirst="+isFirst);
 
 		mMusicInfoLayout = new LinearLayout(me);
 		mMusicInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
@@ -232,6 +268,8 @@ public class Layout {
 		mSubFileText = new TextView(me);
 		mSubFileText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mSubFileText);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	private LinearLayout mMusicPlayerUILayout;
@@ -250,7 +288,7 @@ public class Layout {
 	 * @param isFirst 最初ならtrue
 	 */
 	public void musicPlayerUILayout_Create(final LinearLayout baseLayout, final boolean isFirst) {
-		if (V) Log.v(TAG, "musicPlayerUILayout_Create()");
+		if (T) Log.v(TAG, M()+"@in: baseLayout="+baseLayout+", isFirst="+isFirst);
 
 		mMusicPlayerUILayout = new LinearLayout(me);
 		mMusicPlayerUILayout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
@@ -303,6 +341,7 @@ public class Layout {
 		mNextButton.setOnClickListener(OnClickNextButton);
 		mButtons2Layout.addView(mNextButton);
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -369,29 +408,29 @@ public class Layout {
 	 * 曲情報の更新
 	 */
 	public void musicInfoLayout_Update() {
-		if (V) Log.v(TAG, "musicInfoLayout_Update()");
+		if (T) Log.v(TAG, M()+"@in");
 
-		if (ActivityMain.iMusicPlayerService == null) {
+		IMusicPlayerService sv = ActivityMain.iMusicPlayerService;
+		if (sv == null) {
+			if (T) Log.v(TAG, M()+"@out: iMusicPlayerService == null");
 			return;
 		}
 
 		{
-			String s = null;
+			String s = "";
 			try {
-				s = ActivityMain.iMusicPlayerService.getCurrentTitle();
+				s = sv.getCurrentTitle();
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
-			mTitleText.setText("Title: " + ((s == null) ? "" : s));
+			mTitleText.setText("Title: "+s);
 		}
 
 		{
 			int n = 0;
 			try {
-				n = ActivityMain.iMusicPlayerService.getCurrentDuration();
+				n = sv.getCurrentDuration();
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
 			final String s = "Duration: " +
@@ -406,9 +445,8 @@ public class Layout {
 		{
 			int n = 0;
 			try {
-				n = ActivityMain.iMusicPlayerService.getPlayAt();
+				n = sv.getPlayAt();
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
 			final String s = "PlayTime: " +
@@ -421,37 +459,36 @@ public class Layout {
 		}
 
 		{
-			String s = null;
+			String s = "";
 			try {
-				s = ActivityMain.iMusicPlayerService.getCurrentFileType();
+				s = sv.getCurrentFileType();
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
-			mFileTypeText.setText("File Type: " + ((s == null) ? "" : s));
+			mFileTypeText.setText("File Type: "+s);
 		}
 
 		{
-			String s = null;
+			String s = "";
 			try {
-				s = ActivityMain.iMusicPlayerService.getCurrentFileName(0);
+				s = sv.getCurrentFileName(0);
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
-			mMainFileText.setText("MDX File: " + ((s == null) ? "" : s));
+			mMainFileText.setText("MDX File: "+s);
 		}
 
 		{
-			String s = null;
+			String s = "";
 			try {
-				s = ActivityMain.iMusicPlayerService.getCurrentFileName(1);
+				s = sv.getCurrentFileName(1);
 			} catch (final RemoteException e) {
-				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
 			}
-			mSubFileText.setText("PDX File: " + ((s == null) ? "" : s));
+			mSubFileText.setText("PDX File: "+s);
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 
@@ -459,7 +496,7 @@ public class Layout {
 	 * 曲情報の更新
 	 */
 	public void musicInfoLayout_UpdateTimer() {
-		if (V) Log.v(TAG, "musicInfoLayout_UpdateTimer()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		if (ActivityMain.iMusicPlayerService == null) {
 			return;
@@ -481,5 +518,9 @@ public class Layout {
 			// new DecimalFormat("000").format(playtime%1000);
 			mPlayTimeText.setText(s);
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 }
+
+// [EOF]

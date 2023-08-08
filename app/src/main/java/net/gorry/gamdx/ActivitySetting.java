@@ -18,8 +18,19 @@ import android.view.KeyEvent;
  *
  */
 public class ActivitySetting extends PreferenceActivity {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "ActivitySetting";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
+
 	private Activity me;
 	private boolean noFinishIt = false;
 
@@ -30,8 +41,11 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	protected void onSaveInstanceState(final Bundle outState) {
-		if (V) Log.v(TAG, "onSaveInstanceState()");
+		if (T) Log.v(TAG, M()+"@in: outState="+outState);
+
 		noFinishIt = true;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -40,7 +54,8 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	protected void onCreate(final Bundle savedInstanceState) {
-		if (V) Log.v(TAG, "onCreate()");
+		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
+
 		super.onCreate(savedInstanceState);
 		me = this;
 		setTitle(R.string.activitysetting_title);
@@ -65,6 +80,7 @@ public class ActivitySetting extends PreferenceActivity {
 		Setting.setForPreferenceActivity(sp);
 		addPreferencesFromResource(pref);
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -73,8 +89,11 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public void onRestart() {
-		if (V) Log.v(TAG, "onRestart()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onRestart();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -83,8 +102,11 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public void onStart() {
-		if (V) Log.v(TAG, "onStart()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onStart();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -93,12 +115,15 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public synchronized void onResume() {
-		if (V) Log.v(TAG, "onResume()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onResume();
 		if (!noFinishIt) {
 			//
 		}
 		noFinishIt = false;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -107,11 +132,14 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public synchronized void onPause() {
-		if (V) Log.v(TAG, "onPause()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onPause();
 		if (!noFinishIt) {
 			//
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -120,8 +148,11 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public void onStop() {
-		if (V) Log.v(TAG, "onStop()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onStop();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	//
@@ -131,8 +162,11 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public void onDestroy() {
-		if (V) Log.v(TAG, "onDestroy()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onDestroy();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -153,7 +187,8 @@ public class ActivitySetting extends PreferenceActivity {
 	 */
 	@Override
 	public boolean onKeyDown(final int keyCode, final KeyEvent event) {
-		if (V) Log.v(TAG, "onConfigurationChanged()");
+		if (T) Log.v(TAG, M()+"@in: keyCode="+keyCode+", event="+event);
+
 		if (keyCode == KeyEvent.KEYCODE_BACK) {
 			// アクティビティ終了として使う
 			final SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(me);
@@ -167,7 +202,11 @@ public class ActivitySetting extends PreferenceActivity {
 			return true;
 		}
 		super.onKeyDown(keyCode, event);
+
+		if (T) Log.v(TAG, M()+"@out");
 		return false;
 	}
 
 }
+
+// [EOF]

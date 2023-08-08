@@ -13,12 +13,26 @@ import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.util.Log;
 
 /**
  * @author gorry
  *
  */
 public class SelectMdxFileAdapter extends BaseAdapter {
+	private static final boolean RELEASE = false;//true;
+	private static final String TAG = "SelectMdxFileAdapter";
+	private static final boolean T = true; //false;
+	private static final boolean V = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
+
 	private final LayoutInflater mInflater;
 	private final File[] mFiles;
 	private final String[] mTypes;
@@ -36,6 +50,8 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	 * @param pos pos
 	 */
 	public SelectMdxFileAdapter(final Context context, final File[] files, final int pos) {
+		if (T) Log.v(TAG, M()+"@in: context="+context+", files="+files+", pos="+pos);
+
 		mHighlightPos = ((pos < 0) ? 0 : pos);
 		mInflater = LayoutInflater.from(context);
 
@@ -65,6 +81,8 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 
 		mFolderIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_folder);
 		mMdxIcon = BitmapFactory.decodeResource(context.getResources(), R.drawable.icon_mdx);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
@@ -93,7 +111,9 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	 * @return type
 	 */
 	public String getType(final int position) {
-		if ((position < 0) || (position >= mTypes.length)) return null;
+		if ((position < 0) || (position >= mTypes.length)) {
+			return null;
+		}
 		return mTypes[position];
 	}
 
@@ -102,7 +122,9 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	 * @return desc
 	 */
 	public String getDescs(final int position) {
-		if ((position < 0) || (position >= mTypes.length)) return null;
+		if ((position < 0) || (position >= mTypes.length)) {
+			return null;
+		}
 		return mDescs[position];
 	}
 
@@ -111,11 +133,17 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	 * @param desc desc
 	 */
 	public void setDescs(final int position, final String desc) {
+		if (T) Log.v(TAG, M()+"@in: position="+position+", desc="+desc);
+
 		mDescs[position] = desc;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
 	public View getView(final int position, final View convertView, final ViewGroup parent) {
+		if (T) Log.v(TAG, M()+"in: position="+position+", convertView="+convertView+", parent="+parent);
+
 		ViewHolder holder;
 		View v;
 		final File file = mFiles[position];
@@ -157,7 +185,10 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 			v.setBackgroundColor(Color.TRANSPARENT);
 		}
 
+		if (T) Log.v(TAG, M()+"@out: v="+v);
 		return v;
 	}
 
 }
+
+// [EOF]

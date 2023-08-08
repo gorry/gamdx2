@@ -12,10 +12,18 @@ import android.util.Log;
  *
  */
 public class MusicPlayer {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "MusicPlayer";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
-	@SuppressWarnings("unused")
 	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private final Context me;
 
@@ -34,7 +42,8 @@ public class MusicPlayer {
 	 * @param connect MXDRVGサーバに接続する実体として使用するときはtrue
 	 */
 	public MusicPlayer(final Context context, final boolean connect) {
-		if (V) Log.v(TAG, "MusicPlayer()");
+		if (T) Log.v(TAG, M()+"@in: context="+context+", connect="+connect);
+
 		me = context;
 		mMxdrvg = new Mxdrvg(Setting.sampleRate, (Setting.analogFilter ? 3 : 1), 1024*64, 1024*1024);
 		mMxdrvg.addEventListener(new MxdrvgListener());
@@ -42,23 +51,29 @@ public class MusicPlayer {
 		mMxdrvg.attachAudioTrack();
 		mMxdrvg.attachMonitorTimer();
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 破棄
 	 */
 	public void dispose() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		mMxdrvg.detachMonitorTimer();
 		mMxdrvg.detachAudioTrack();
 		mMxdrvg.dispose();
 		mMxdrvg = null;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 状態のセーブ
 	 */
 	public void save() {
-		if (V) Log.v(TAG, "save()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		final SharedPreferences pref = me.getSharedPreferences("musicplayer", 0);
 		final SharedPreferences.Editor editor = pref.edit();
 		if (mPlayList == null) {
@@ -73,13 +88,16 @@ public class MusicPlayer {
 		editor.putString("LastSelectedFileName", mLastSelectedFileName);
 
 		editor.commit();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 状態のロード
 	 */
 	public void load() {
-		if (V) Log.v(TAG, "load()");
+		if (T) Log.v(TAG, M()+"@out");
+
 		final SharedPreferences pref = me.getSharedPreferences("musicplayer", 0);
 		final int playListSize = pref.getInt("PlayListSize", 0);
 		if (playListSize == 0) {
@@ -92,6 +110,8 @@ public class MusicPlayer {
 		}
 		mPlayNumber = pref.getInt("PlayNumber", 0);
 		mLastSelectedFileName = pref.getString("LastSelectedFileName", "");
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -100,7 +120,8 @@ public class MusicPlayer {
 	private class MxdrvgListener implements MxdrvgEventListener {
 		@Override
 		public synchronized void endPlay() {
-			if (V) Log.v(TAG, "endPlay()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			for (int i=mListeners.length-1; i>=0; i--) {
 				mListeners[i].endPlay();
 			}
@@ -110,14 +131,19 @@ public class MusicPlayer {
 					setPlay(true);
 				}
 			}
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public synchronized void timerEvent(final int playAt) {
-			// if (V) Log.v(TAG, "timerEvent()");
+			// if (T) Log.v(TAG, M()+"@in: playAt="+playAt);
+
 			for (int i=mListeners.length-1; i>=0; i--) {
 				mListeners[i].timerEvent(playAt);
 			}
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 	}
 
@@ -126,7 +152,8 @@ public class MusicPlayer {
 	 * @param l リスナ
 	 */
 	public void addEventListener(final MusicPlayerEventListener l) {
-		if (V) Log.v(TAG, "addEventListener()");
+		if (T) Log.v(TAG, M()+"@in: l="+l);
+
 		if (l == null) {
 			throw new IllegalArgumentException("Listener is null.");
 		}
@@ -135,6 +162,8 @@ public class MusicPlayer {
 		mListeners = new MusicPlayerEventListener[len + 1];
 		System.arraycopy(oldListeners, 0, mListeners, 0, len);
 		mListeners[len] = l;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -143,10 +172,13 @@ public class MusicPlayer {
 	 * @return true 正常に削除された
 	 */
 	public synchronized boolean removeEventListener(final MusicPlayerEventListener l) {
-		if (V) Log.v(TAG, "removeEventListener()");
+		if (T) Log.v(TAG, M()+"@in: l="+l);
+
 		if (l == null) {
+			Log.e(TAG, M()+"failed: l == null");
 			return false;
 		}
+
 		int index = -1;
 		for (int i=0; i<mListeners.length; i++) {
 			if (mListeners[i].equals(l)) {
@@ -155,8 +187,10 @@ public class MusicPlayer {
 			}
 		}
 		if (index == -1) {
+			Log.e(TAG, M()+"failed: index == -1");
 			return false;
 		}
+
 		mListeners[index] = null;
 		final int len = mListeners.length - 1;
 		final MusicPlayerEventListener[] newListeners = new MusicPlayerEventListener[len];
@@ -166,6 +200,8 @@ public class MusicPlayer {
 			}
 		}
 		mListeners = newListeners;
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
@@ -175,11 +211,14 @@ public class MusicPlayer {
 	 * @return 成功なら1
 	 */
 	public boolean setPlayList(final String[] playList) {
-		if (V) Log.v(TAG, "setPlayList()");
+		if (T) Log.v(TAG, M()+"@in: playList="+playList);
 
 		setPlay(false);
 		mPlayList = playList;
-		return (setPlayNumber(0));
+		boolean ret = setPlayNumber(0);
+
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -187,8 +226,7 @@ public class MusicPlayer {
 	 * @return MDXファイルのリスト
 	 */
 	public String[] getPlayList() {
-		if (V) Log.v(TAG, "getPlayList()");
-
+		if (T) Log.v(TAG, M()+"@out: mPlayList="+mPlayList);
 		return mPlayList;
 	}
 
@@ -198,12 +236,14 @@ public class MusicPlayer {
 	 * @return 成功ならtrue
 	 */
 	public boolean setPlayNumber(final int n) {
-		if (V) Log.v(TAG, "setPlayNumber()");
-		if (V) Log.v(TAG, "setPlayNumber(): n="+n);
+		if (T) Log.v(TAG, M()+"@in: n="+n);
+
 		if ((mPlayList == null) || (mPlayList.length == 0)) {
+			if (T) Log.v(TAG, M()+"@out: false");
 			return false;
 		}
 		if ((n < 0) && (n >= mPlayList.length)) {
+			if (T) Log.v(TAG, M()+"@out: false");
 			return false;
 		}
 		mPlayNumber = n;
@@ -214,10 +254,13 @@ public class MusicPlayer {
 					for (int i=mListeners.length-1; i>=0; i--) {
 						mListeners[i].acceptMusicFile();
 					}
+					if (T) Log.v(TAG, M()+"@out: true");
 					return true;
 				}
 			}
 		}
+
+		if (T) Log.v(TAG, M()+"@out: false");
 		return false;
 	}
 
@@ -226,7 +269,7 @@ public class MusicPlayer {
 	 * @return プレイリスト番号（0～リスト数-1）
 	 */
 	public int getPlayNumber() {
-		if (V) Log.v(TAG, "getPlayNumber()");
+		if (T) Log.v(TAG, M()+"@out: mPlayNumber="+mPlayNumber);
 		return mPlayNumber;
 	}
 
@@ -235,11 +278,15 @@ public class MusicPlayer {
 	 * @return 成功ならtrue
 	 */
 	public boolean setPlayNumberNext() {
-		if (V) Log.v(TAG, "setPlayNumberNext()");
+		if (T) Log.v(TAG, M()+"@in");
+
+		boolean ret = false;
 		if (mPlayNumber+1 < mPlayList.length) {
-			return setPlayNumber(mPlayNumber+1);
+			ret = setPlayNumber(mPlayNumber+1);
 		}
-		return false;
+
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -247,10 +294,14 @@ public class MusicPlayer {
 	 * @return 成功ならtrue
 	 */
 	public boolean setPlayNumberPrev() {
-		if (V) Log.v(TAG, "setPlayNumberPrev()");
+		if (T) Log.v(TAG, M()+"@in");
+
+		boolean ret = false;
 		if (mPlayNumber-1 >= 0) {
-			return setPlayNumber(mPlayNumber-1);
+			ret = setPlayNumber(mPlayNumber-1);
 		}
+
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return false;
 	}
 
@@ -259,9 +310,12 @@ public class MusicPlayer {
 	 * @param f trueで再生開始、falseで再生終了
 	 */
 	public void setPlay(final boolean f) {
-		if (V) Log.v(TAG, "setPlay()");
+		if (T) Log.v(TAG, M()+"@in: f="+f);
+
 		mAutoPlayNextMusic = f;
 		mMxdrvg.setPlay(f);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -271,8 +325,11 @@ public class MusicPlayer {
 	 * @param fadeout ループ後のフェードアウト
 	 */
 	public void setPlayAt(final int playat, final int loop, final int fadeout) {
-		if (V) Log.v(TAG, "setPlayAt()");
+		if (T) Log.v(TAG, M()+"@in: playat="+playat+", loop="+loop+", fadeout="+fadeout);
+
 		mMxdrvg.setPlayAt(playat, loop, fadeout);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -280,8 +337,9 @@ public class MusicPlayer {
 	 * @return 再生位置
 	 */
 	public int getPlayAt() {
-		if (V) Log.v(TAG, "getPlayAt()");
-		return mMxdrvg.getPlayAt();
+		int ret = mMxdrvg.getPlayAt();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -289,8 +347,9 @@ public class MusicPlayer {
 	 * @return trueで再生中、falseで非再生中
 	 */
 	public boolean getPlay() {
-		if (V) Log.v(TAG, "getPlay()");
-		return mMxdrvg.getPlay();
+		boolean ret = mMxdrvg.getPlay();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -298,8 +357,9 @@ public class MusicPlayer {
 	 * @return タイトル名
 	 */
 	public String getCurrentTitle() {
-		if (V) Log.v(TAG, "getCurrentTitle()");
-		return mMxdrvg.getTitle();
+		String ret = mMxdrvg.getTitle();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -307,7 +367,8 @@ public class MusicPlayer {
 	 * @return 曲の長さ
 	 */
 	public int getCurrentDuration() {
-		if (V) Log.v(TAG, "getCurrentDuration()");
+		int ret = mMxdrvg.getDuration();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return mMxdrvg.getDuration();
 	}
 
@@ -316,8 +377,9 @@ public class MusicPlayer {
 	 * @return 再生終了していたらtrue
 	 */
 	public boolean getTerminated() {
-		if (V) Log.v(TAG, "getTerminated()");
-		return mMxdrvg.getTerminated();
+		boolean ret = mMxdrvg.getTerminated();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -325,8 +387,9 @@ public class MusicPlayer {
 	 * @return ファイルタイプ
 	 */
 	public String getCurrentFileType() {
-		if (V) Log.v(TAG, "getCurrentFileType()");
-		return mMxdrvg.getFileType();
+		String ret = mMxdrvg.getFileType();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -335,8 +398,11 @@ public class MusicPlayer {
 	 * @return ファイル名
 	 */
 	public String getCurrentFileName(final int id) {
-		if (V) Log.v(TAG, "getCurrentFileName()");
-		return mMxdrvg.getFileName(id);
+		if (T) Log.v(TAG, M()+"@in: id="+id);
+
+		String ret = mMxdrvg.getFileName(id);
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -344,8 +410,11 @@ public class MusicPlayer {
 	 * @param filename ファイル名
 	 */
 	public void setLastSelectedFileName(final String filename) {
-		if (V) Log.v(TAG, "setLastSelectedFileName()");
+		if (T) Log.v(TAG, M()+"@in: filename="+filename);
+
 		mLastSelectedFileName = filename;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -353,8 +422,9 @@ public class MusicPlayer {
 	 * @return ファイル名
 	 */
 	public String getLastSelectedFileName() {
-		if (V) Log.v(TAG, "getLastSelectedFileName()");
-		return mLastSelectedFileName;
+		String ret = mLastSelectedFileName;
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 }

@@ -17,9 +17,18 @@ import android.util.Log;
  */
 
 public abstract class ForegroundService extends Service {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "ForegroundService";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
-	//private static final boolean D = false;
+	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private static final Class<?>[] mStartForegroundSignature =
 		new Class[] { int.class, Notification.class };
@@ -37,12 +46,17 @@ public abstract class ForegroundService extends Service {
 	 * @param id ID
 	 */
 	public ForegroundService(final int id) {
-		if (V) Log.v(TAG, "ForegroundService()");
+		if (T) Log.v(TAG, M()+"@in: id="+id);
+
 		mNotificationId = id;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	protected NotificationManager getNotificationManager() {
-		if (V) Log.v(TAG, "getNotificationManager()");
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (T) Log.v(TAG, M()+"@out: mNotificationManager="+mNotificationManager);
 		return mNotificationManager;
 	}
 
@@ -51,7 +65,8 @@ public abstract class ForegroundService extends Service {
 	 * available.
 	 */
 	protected void startForegroundCompat(final Notification notification) {
-		if (V) Log.v(TAG, "startForegroundCompat()");
+		if (T) Log.v(TAG, M()+"@in: notification="+notification);
+
 		if (mStartForeground != null) {
 			if (V) Log.v(TAG, "startForegroundCompat(): mStartForeground != null");
 			mStartForegroundArgs[0] = Integer.valueOf(mNotificationId);
@@ -64,9 +79,11 @@ public abstract class ForegroundService extends Service {
 			return;
 		}
 
-		if (V) Log.v(TAG, "startForegroundCompat(): mStartForeground == null");
+		if (V) Log.v(TAG, M()+"notify!");
 		// setForeground(true);
 		mNotificationManager.notify(mNotificationId, notification);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -74,7 +91,8 @@ public abstract class ForegroundService extends Service {
 	 * available.
 	 */
 	protected void stopForegroundCompat() {
-		if (V) Log.v(TAG, "stopForegroundCompat()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		if (mStopForeground != null) {
 			if (V) Log.v(TAG, "stopForegroundCompat(): mStopForeground != null");
 			mStopForegroundArgs[0] = Boolean.TRUE;
@@ -89,11 +107,14 @@ public abstract class ForegroundService extends Service {
 		if (V) Log.v(TAG, "stopForegroundCompat(): mStopForeground == null");
 		mNotificationManager.cancel(mNotificationId);
 		// setForeground(false);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
 	public void onCreate() {
-		if (V) Log.v(TAG, "onCreate()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 		try {
 			mStartForeground = getClass().getMethod("startForeground", mStartForegroundSignature);
@@ -107,11 +128,18 @@ public abstract class ForegroundService extends Service {
 		} else {
 			if (V) Log.v(TAG, "mStartForeground() == null");
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
 	public void onDestroy() {
-		if (V) Log.v(TAG, "onDestroy()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		stopForegroundCompat();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 }
+
+// [EOF]

@@ -24,9 +24,18 @@ import android.util.Log;
  *
  */
 public class Mxdrvg implements Natives.EventListener {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "Mxdrvg";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
 	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	private MxdrvgEventListener[] mListeners = new MxdrvgEventListener[0];
 
@@ -71,8 +80,10 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param pdxbufsize PDXバッファサイズ
 	 */
 	public Mxdrvg(final int samprate, final int fastmode, final int mdxbufsize, final int pdxbufsize) {
-		if (V) Log.v(TAG, "Mxdrvg()");
+		if (T) Log.v(TAG, M()+"@in: samprate="+samprate+", fastmode="+fastmode+", mdxbufsize="+mdxbufsize+", pdxbufsize="+pdxbufsize);
+
 		if (!loadLibrary()) {
+			Log.e(TAG, M()+"failed: loadLibrary()");
 			return;
 		}
 		mPreferredAudioSamprate = samprate;
@@ -80,14 +91,19 @@ public class Mxdrvg implements Natives.EventListener {
 		final int useIRQ = 1; //3; // bit0=onTerminatePlayFunc, bit1=onOPMIntFunc
 		Natives.mxdrvgStart(samprate, fastmode, mdxbufsize, pdxbufsize, useIRQ);
 		Natives.mxdrvgPCM8Enable(1);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * 破棄
 	 */
 	public void dispose() {
-		if (V) Log.v(TAG, "dispose()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		Natives.mxdrvgEnd();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -95,7 +111,8 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param l リスナ
 	 */
 	public void addEventListener(final MxdrvgEventListener l) {
-		if (V) Log.v(TAG, "addEventListener()");
+		if (T) Log.v(TAG, M()+"@in: l="+l);
+
 		if (l == null) {
 			throw new IllegalArgumentException("Listener is null.");
 		}
@@ -104,6 +121,8 @@ public class Mxdrvg implements Natives.EventListener {
 		mListeners = new MxdrvgEventListener[len + 1];
 		System.arraycopy(oldListeners, 0, mListeners, 0, len);
 		mListeners[len] = l;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -112,8 +131,10 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return true 正常に削除された
 	 */
 	public synchronized boolean removeEventListener(final MxdrvgEventListener l) {
-		if (V) Log.v(TAG, "removeEventListener()");
+		if (T) Log.v(TAG, M()+"@in: l="+l);
+
 		if (l == null) {
+			Log.e(TAG, M()+"failed: l == null");
 			return false;
 		}
 		int index = -1;
@@ -124,6 +145,7 @@ public class Mxdrvg implements Natives.EventListener {
 			}
 		}
 		if (index == -1) {
+			Log.e(TAG, M()+"failed: index == -1");
 			return false;
 		}
 		mListeners[index] = null;
@@ -135,6 +157,8 @@ public class Mxdrvg implements Natives.EventListener {
 			}
 		}
 		mListeners = newListeners;
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
@@ -143,15 +167,18 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param pdxPath PDXパス
 	 */
 	public void setPdxPath(final String pdxPath) {
-		if (V) Log.v(TAG, "setPdxPath()");
+		if (T) Log.v(TAG, M()+"@in: pdxpath="+pdxPath);
+
 		mPdxFolderName = pdxPath;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * オーディオトラックの設置
 	 */
 	public synchronized void attachAudioTrack() {
-		if (V) Log.v(TAG, "attachAudioTrack()");
+		if (T) Log.v(TAG, M()+"@in");
 
 		// 効果ないのでカット
 		Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -181,14 +208,14 @@ public class Mxdrvg implements Natives.EventListener {
 			e.printStackTrace();
 		}
 		if (mAudioTrack == null) {
-			Log.e(TAG, "Mxdrvg(): AudioTrack() error");
+			Log.e(TAG, M()+"failed: AudioTrack() error");
 			return;
 		}
 
 		mAudioThread = new Thread(new Runnable() {
 			@Override
 			public void run() {
-				if (V) Log.v(TAG, "Mxdrvg(): run");
+				if (T) Log.v(TAG, M()+"@in");
 				Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 				mAudioBufferOfs = 0;
 				mBufferRest = 0;
@@ -197,6 +224,7 @@ public class Mxdrvg implements Natives.EventListener {
 						new AudioTrack.OnPlaybackPositionUpdateListener() {
 							@Override
 							public void onMarkerReached(final AudioTrack track) {
+								if (T) Log.v(TAG, M()+"@in: track="+track);
 								/*
 								// Galaxt TabではTHREAD_PRIORITY_URGENT_AUDIOにしても音が切れる・・・
 								// Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
@@ -207,10 +235,13 @@ public class Mxdrvg implements Natives.EventListener {
 								mAudioTrack.write(mWaveBuffer, 0, mAudioBufferDeltaSize*2);
 								// mAudioTrack.setNotificationMarkerPosition(1);
 								*/
+
+								if (T) Log.v(TAG, M()+"@out");
 							}
 
 							@Override
 							public void onPeriodicNotification(final AudioTrack track) {
+								if (T) Log.v(TAG, M()+"@in: track="+track);
 								// if (D) Log.d(TAG, "Mxdrvg(): run(): onPeriodicNotification(): mBufferRest="+mBufferRest);
 								Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
@@ -221,6 +252,8 @@ public class Mxdrvg implements Natives.EventListener {
 									fillAudioTrack();
 									mAudioTrack.write(mWaveBuffer, 0, mAudioBufferDeltaSize*2);
 								}
+
+								if (T) Log.v(TAG, M()+"@out");
 							}
 						}
 				);
@@ -232,16 +265,21 @@ public class Mxdrvg implements Natives.EventListener {
 				mAudioTrack.write(mWaveBuffer, 0, mAudioBufferDeltaSize*2);
 				// mAudioTrack.setNotificationMarkerPosition(1);
 				mAudioTrack.setPositionNotificationPeriod(1024);
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		});
 		mAudioThread.start();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * オーディオトラックの解除
 	 */
 	public synchronized void detachAudioTrack() {
-		if (V) Log.v(TAG, "detachAudioTrack()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		if (mAudioTrack != null) {
 			mStopMxdrvg = true;
 			mPauseMxdrvg = true;
@@ -251,13 +289,17 @@ public class Mxdrvg implements Natives.EventListener {
 			mAudioTrack = null;
 			mWaveBuffer = null;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * バッファにオーディオデータを注入
 	 */
 	public void fillAudioTrack() {
-		if (V) Log.v(TAG, "fillAudioTrack(): mAudioBufferOfs="+mAudioBufferOfs+", mAudioBufferDeltaSize="+mAudioBufferDeltaSize);
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (V) Log.v(TAG, M()+"mAudioBufferOfs="+mAudioBufferOfs+", mAudioBufferDeltaSize="+mAudioBufferDeltaSize);
 		while (mAudioBufferOfs < mAudioBufferDeltaSize) {
 			int delta = mAudioBufferDeltaSize - mAudioBufferOfs;
 			if (delta > mMxdrvgWaveDeltaSize) {
@@ -267,7 +309,7 @@ public class Mxdrvg implements Natives.EventListener {
 				Arrays.fill(mWaveBuffer, mAudioBufferOfs*2, (mAudioBufferOfs+delta)*2, (short)0);
 			} else {
 				Natives.mxdrvgGetPCM(mWaveBuffer, mAudioBufferOfs, delta);
-				// if (V) Log.v(TAG, "fillAudioTrack(): mWaveBuffer[0]="+mWaveBuffer[0]);
+				// if (V) Log.v(TAG, M()+"mWaveBuffer[0]="+mWaveBuffer[0]);
 				if (Natives.mxdrvgGetPlayAt() >= mDuration) {
 					mMusicTerminatedMxdrvg = true;
 				}
@@ -276,12 +318,16 @@ public class Mxdrvg implements Natives.EventListener {
 			mBufferRest += delta;
 		}
 		mAudioBufferOfs -= mAudioBufferDeltaSize;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
 	 * オーディオトラックの調査
 	 */
 	public boolean configAudioTrack() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		// テスト用
 		// mPreferredAudioSamprate = 48000;
 
@@ -310,22 +356,26 @@ public class Mxdrvg implements Natives.EventListener {
 		} else {
 			mAudioSamprate = mPreferredAudioSamprate;
 		}
-		if (V) Log.v(TAG, "Mxdrvg(): mAudioSamprate=" + mAudioSamprate);
-		if (V) Log.v(TAG, "Mxdrvg(): mMinAudioTrackBufferSize=" + mMinAudioBufferSize);
+		if (V) Log.v(TAG, M()+"mAudioSamprate=" + mAudioSamprate+", mMinAudioTrackBufferSize=" + mMinAudioBufferSize);
 		if (mMinAudioBufferSize == 0) {
-			Log.e(TAG, "Mxdrvg(): AudioTrack.getMinBufferSize() error");
+			Log.e(TAG, M()+"AudioTrack.getMinBufferSize() error");
 			return false;
 		}
 
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
-	
+
 	public void attachMonitorTimer() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		mTimer = new IntervalTimer() {
 			private int lastPlayAt = 0;
 
 			@Override
 			public void onTimer(final long timerCount) {
+				if (T) Log.v(TAG, M()+"@in: timerCount="+timerCount);
+
 				/*
 				// こちらだと曲終了後のウェイトが反映されないのでナシ
 				if (Natives.mxdrvgGetTerminated() != 0) {
@@ -351,17 +401,25 @@ public class Mxdrvg implements Natives.EventListener {
 						mListeners[i].endPlay();
 					}
 				}
+
+				if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 	}
 
 	public void detachMonitorTimer() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		mTimer.stopTimer();
 		mTimer = null;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 	
 	@Override
 	protected void finalize() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		try {
 			super.finalize();
 		} catch (final Throwable e) {
@@ -376,6 +434,8 @@ public class Mxdrvg implements Natives.EventListener {
 			mAudioTrack.release();
 		}
 		*/
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -383,26 +443,32 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 常にtrue
 	 */
 	public boolean loadLibrary() {
-		if (V) Log.v(TAG, "loadLibrary()");
-		if (mLibraryLoaded) {
-			return true;
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (!mLibraryLoaded) {
+			LibraryLoader.load("mxdrvg");
+			Natives.setListener(this);
+			mLibraryLoaded = true;
 		}
-		LibraryLoader.load("mxdrvg");
-		Natives.setListener(this);
-		mLibraryLoaded = true;
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
 	@Override
 	public void onOPMIntFunc(final int ch, final int workSize, final byte[] mdxChannelWork, final byte[] mdxGlobalWork) {
-		if (V) Log.v(TAG, "onOPMIntFunc()");
+		if (T) Log.v(TAG, M()+"@in: ch="+ch+", workSize="+workSize+", mdxChannelWork="+mdxChannelWork+", mdxGlobalWork="+mdxGlobalWork);
+
 		//
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
 	public void onTerminatePlayFunc(final int i) {
-		if (V) Log.v(TAG, "onTerminatePlayFunc()");
+		if (T) Log.v(TAG, M()+"@in: i="+i);
 		//
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -413,6 +479,8 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return UTF-8文字列
 	 */
 	public String getShiftJisStringFromByteArray(final byte[] b, final int from, final int count) {
+		if (T) Log.v(TAG, M()+"@in: b="+b+", from="+from+", count="+count);
+
 		String s = null;
 		final byte[] a = new byte[count];
 		System.arraycopy(b, from, a, 0, count);
@@ -421,6 +489,8 @@ public class Mxdrvg implements Natives.EventListener {
 		} catch (final UnsupportedEncodingException e) {
 			s = "";
 		}
+
+		if (T) Log.v(TAG, M()+"@out: s="+s);
 		return s;
 	}
 
@@ -431,7 +501,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 成功ならtrue
 	 */
 	public boolean loadMdxFile(final String mdxPath, final boolean infoonly) {
-		if (V) Log.v(TAG, "loadMdxFile()");
+		if (T) Log.v(TAG, M()+"@in: mdxPath="+mdxPath+", infoonly="+infoonly);
 
 		byte[] mdxFile = null;
 		byte[] pdxFile = null;
@@ -449,14 +519,14 @@ public class Mxdrvg implements Natives.EventListener {
 			fin.read(mdxFile);
 			fin.close();
 		} catch (final FileNotFoundException e) {
-			if (V) Log.v(TAG, "MDX File [" + mdxPath + "] not found");
+			Log.e(TAG, M()+"MDX File [" + mdxPath + "] not found");
 			return false;
 		} catch (final IOException e) {
-			if (V) Log.v(TAG, "MDX File [" + mdxPath + "] load error");
+			e.printStackTrace();
 			return false;
 		}
 		if (mdxFileSize == 0) {
-			if (V) Log.v(TAG, "MDX File [" + mdxPath + "] not found");
+			Log.e(TAG, M()+"MDX File [" + mdxPath + "] size error");
 			return false;
 		}
 
@@ -612,9 +682,11 @@ public class Mxdrvg implements Natives.EventListener {
 			pdxData = null;
 			mDuration = Natives.mxdrvgMeasurePlayTime(2, 1);
 		} catch (final IndexOutOfBoundsException e) {
-			if (V) Log.v(TAG, e.getMessage());
+			Log.e(TAG, M()+"failed: MDX File [" + mdxPath + "] "+e.getMessage());
 			return false;
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
@@ -623,9 +695,12 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param vol 音量
 	 */
 	public void setTotalVolume(final int vol) {
-		if (V) Log.v(TAG, "setTotalVolume()");
+		if (T) Log.v(TAG, M()+"@in: vol="+vol);
+
 		mMasterVolume = vol;
 		Natives.mxdrvgTotalVolume(vol);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -633,8 +708,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 音量
 	 */
 	public int getTotalVolume() {
-		if (V) Log.v(TAG, "getTotalVolume()");
-		return Natives.mxdrvgGetTotalVolume();
+		int ret = Natives.mxdrvgGetTotalVolume();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -642,8 +718,11 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param mask マスク
 	 */
 	public void setChannelMask(final int mask) {
-		if (V) Log.v(TAG, "setChannelMask()");
+		if (T) Log.v(TAG, M()+"@in: mask="+mask);
+
 		Natives.mxdrvgChannelMask(mask);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -651,8 +730,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return チャンネルマスク
 	 */
 	public int getChannelMask() {
-		if (V) Log.v(TAG, "getChannelMask()");
-		return Natives.mxdrvgGetChannelMask();
+		int ret = Natives.mxdrvgGetChannelMask();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -660,8 +740,11 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param sw 1で使用、0で非使用
 	 */
 	public void setPCM8Enable(final int sw) {
-		if (V) Log.v(TAG, "setPCM8Enable()");
+		if (T) Log.v(TAG, M()+"@in: sw="+sw);
+
 		Natives.mxdrvgPCM8Enable(sw);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -669,8 +752,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 1で使用、0で非使用
 	 */
 	public int getPCM8Enable() {
-		if (V) Log.v(TAG, "getPCM8Enable()");
-		return Natives.mxdrvgGetPCM8Enable();
+		int ret = Natives.mxdrvgGetPCM8Enable();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -678,7 +762,8 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param f trueで演奏、falseで停止
 	 */
 	public void setPlay(final boolean f) {
-		if (V) Log.v(TAG, "setPlay()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		if (f) {
 			Natives.mxdrvgPlay();
 			Natives.mxdrvgPlayAt(mPlayAt, mLoop, mFadeout);
@@ -691,6 +776,8 @@ public class Mxdrvg implements Natives.EventListener {
 			mStopMxdrvg = true;
 			mTimer.stopTimer();
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -698,7 +785,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 演奏中ならtrue
 	 */
 	public boolean getPlay() {
-		if (V) Log.v(TAG, "getPlay()");
+		if (T) Log.v(TAG, M()+"@out: ret="+mStopMxdrvg);
 		return mStopMxdrvg;
 	}
 
@@ -709,11 +796,14 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param fadeout ループ後のフェードアウト
 	 */
 	public void setPlayAt(final int playat, final int loop, final int fadeout) {
-		if (V) Log.v(TAG, "setPlayAt()");
+		if (T) Log.v(TAG, M()+"@in: playat="+playat+", loop="+loop+", fadeout="+fadeout);
+
 		mPlayAt = playat;
 		mLoop = loop;
 		mFadeout = fadeout;
 		Natives.mxdrvgPlayAt(playat, loop, fadeout);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -721,8 +811,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 再生位置
 	 */
 	public int getPlayAt() {
-		// Log.d(TAG, "getPlayAt()");
-		return Natives.mxdrvgGetPlayAt();
+		int ret = Natives.mxdrvgGetPlayAt();
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -730,8 +821,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 再生終了していたらtrue
 	 */
 	public boolean getTerminated() {
-		if (V) Log.v(TAG, "getTerminated()");
-		return (Natives.mxdrvgGetTerminated() != 0);
+		boolean ret = (Natives.mxdrvgGetTerminated() != 0);
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -739,12 +831,11 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @param f trueでポーズ、falseでポーズ解除
 	 */
 	public void setPause(final boolean f) {
-		if (V) Log.v(TAG, "setPause()");
-		if (f) {
-			mPauseMxdrvg = true;
-		} else {
-			mPauseMxdrvg = false;
-		}
+		if (T) Log.v(TAG, M()+"@in: f="+f);
+
+		mPauseMxdrvg = f;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -752,7 +843,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 演奏中ならtrue
 	 */
 	public boolean getPause() {
-		if (V) Log.v(TAG, "getPause()");
+		if (T) Log.v(TAG, M()+"@out: ret="+mPauseMxdrvg);
 		return mPauseMxdrvg;
 	}
 
@@ -761,7 +852,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return タイトル名
 	 */
 	public String getTitle() {
-		if (V) Log.v(TAG, "getTitle()");
+		if (T) Log.v(TAG, M()+"@out: ret="+mMdxTitle);
 		return mMdxTitle;
 	}
 
@@ -770,7 +861,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return 曲の長さ
 	 */
 	public int getDuration() {
-		if (V) Log.v(TAG, "getDuration()");
+		if (T) Log.v(TAG, M()+"@out: ret="+mDuration);
 		return mDuration;
 	}
 
@@ -779,8 +870,9 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return ファイルタイプ
 	 */
 	public String getFileType() {
-		if (V) Log.v(TAG, "getFileType()");
-		return "MXDRV";
+		String ret = "MXDRV";
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 	/**
@@ -789,14 +881,22 @@ public class Mxdrvg implements Natives.EventListener {
 	 * @return ファイル名
 	 */
 	public String getFileName(final int id) {
-		if (V) Log.v(TAG, "getFileName()");
+		if (T) Log.v(TAG, M()+"@in: id="+id);
+
+		String ret = null;
 		switch (id) {
 			case 0:
-				return mMdxFileName;
+				ret = mMdxFileName;
+				break;
 			case 1:
-				return mPdxFileName;
+				ret = mPdxFileName;
+				break;
 		}
-		return null;
+
+		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		return ret;
 	}
 
 }
+
+// [EOF]

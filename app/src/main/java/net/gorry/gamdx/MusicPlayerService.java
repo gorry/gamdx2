@@ -24,9 +24,18 @@ import androidx.core.app.NotificationCompat;
  *
  */
 public class MusicPlayerService extends ForegroundService {
+	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "MusicPlayerService";
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
 	private static final boolean D = false;
+	private static final boolean I = !RELEASE;
+
+	private static String M() {
+		StackTraceElement[] es = new Exception().getStackTrace();
+		int count = 1; while (es[count].getMethodName().contains("$")) count++;
+		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
+	}
 
 	/** MusicPlayerServiceのアクション名 */
 	public static final String ACTION = "MusicPlayerService";
@@ -54,6 +63,9 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	public MusicPlayerService() {
 		super(NOTIFY_SYSTEM);
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -62,10 +74,13 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public void onCreate() {
+		if (T) Log.v(TAG, M()+"@in");
+
 		super.onCreate();
-		if (D) Log.d(TAG, "onCreate()");
 		// Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND);
 		nm = super.getNotificationManager();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -74,7 +89,8 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public void onStart(final Intent intent, final int startId) {
-		if (D) Log.d(TAG, "onStart()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent+", startId="+startId);
+
 		final Bundle extras = intent.getExtras();
 		if (extras != null) {
 			//
@@ -133,6 +149,7 @@ public class MusicPlayerService extends ForegroundService {
 			mSetAlarm = true;
 		}
 
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -141,7 +158,8 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public void onDestroy() {
-		if (D) Log.d(TAG, "onDestroy()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		showNotification(
 				"End", "GAMDX",
 				getString(R.string.musicplayerservice_java_shutdownmusicplayerservice),
@@ -166,6 +184,8 @@ public class MusicPlayerService extends ForegroundService {
 		player = null;
 
 		super.onDestroy();
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -174,7 +194,8 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public IBinder onBind(final Intent intent) {
-		if (D) Log.d(TAG, "onBind()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent);
+
 		me = this;
 		final Bundle extras = intent.getExtras();
 		if (extras != null) {
@@ -194,6 +215,7 @@ public class MusicPlayerService extends ForegroundService {
 			return null;
 		}
 
+		if (T) Log.v(TAG, M()+"@out: apIMusicPlayerService="+apIMusicPlayerService);
 		return apIMusicPlayerService;
 	}
 
@@ -203,7 +225,9 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public void onRebind(final Intent intent) {
-		if (D) Log.d(TAG, "onRebind()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/*
@@ -212,13 +236,16 @@ public class MusicPlayerService extends ForegroundService {
 	 */
 	@Override
 	public boolean onUnbind(final Intent intent) {
-		if (D) Log.d(TAG, "onUnbind()");
+		if (T) Log.v(TAG, M()+"@in: intent="+intent);
+
+		if (T) Log.v(TAG, M()+"@out");
 		return true;
 	}
 
 	@Override
 	public void onLowMemory() {
-		if (D) Log.d(TAG, "onLowMemory()");
+		if (T) Log.v(TAG, M()+"@in");
+
 		showNotification(
 				"Low Memory", "GAMDX",
 				getString(R.string.musicplayerservice_java_onlowmemory),
@@ -231,7 +258,8 @@ public class MusicPlayerService extends ForegroundService {
 		editor.putBoolean("killedbylowmemory", true);
 		editor.commit();
 		pref = null;
-		return;
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	//
@@ -241,26 +269,35 @@ public class MusicPlayerService extends ForegroundService {
 	private class MusicPlayerListener implements MusicPlayerEventListener {
 		@Override
 		public void endPlay() {
-			if (D) Log.d(TAG, "endPlay()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			final Intent intent = new Intent(ACTION);
 			intent.putExtra("msg", MusicPlayerService.END_PLAY);
 			sendBroadcast(intent);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public void timerEvent(final int playAt) {
-			if (D) Log.d(TAG, "timerEvent()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			final Intent intent = new Intent(ACTION);
 			intent.putExtra("msg", MusicPlayerService.TIMER_IRQ);
 			sendBroadcast(intent);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public void acceptMusicFile() {
-			if (D) Log.d(TAG, "acceptMusicFile()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			final Intent intent = new Intent(ACTION);
 			intent.putExtra("msg", MusicPlayerService.ACCEPT_MUSIC_FILE);
 			sendBroadcast(intent);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 	}
@@ -273,7 +310,8 @@ public class MusicPlayerService extends ForegroundService {
 	 * @param id ID
 	 */
 	private Notification showNotification(final String ticker, final String title, final String message, final int icon, final int flag, final int id) {
-		if (D) Log.d(TAG, "showNotification()");
+		if (T) Log.v(TAG, M()+"@in: ticker="+ticker+", title="+title+", message="+message+", icon="+icon+", flag="+flag+", id="+id);
+
 		final Intent intent = new Intent(this, net.gorry.gamdx.ActivityMain.class);
 		if (id == 1) {
 			//
@@ -296,6 +334,8 @@ public class MusicPlayerService extends ForegroundService {
 		Notification notification = builder.build();
 		nm.cancel(id);
 		nm.notify(id, notification);
+
+		if (T) Log.v(TAG, M()+"@out: notification="+notification);
 		return notification;
 	}
 
@@ -307,8 +347,11 @@ public class MusicPlayerService extends ForegroundService {
 	 * @param id ID
 	 */
 	private void clearNotification(final int id) {
-		if (D) Log.d(TAG, "clearNotification()");
+		if (T) Log.v(TAG, M()+"@in: id="+id);
+
 		nm.cancel(id);
+
+		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -317,189 +360,287 @@ public class MusicPlayerService extends ForegroundService {
 	private final IMusicPlayerService.Stub apIMusicPlayerService = new IMusicPlayerService.Stub() {
 		@Override
 		public void shutdown() {
-			if (V) Log.v(TAG, "shutdown()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			stopSelf();
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public void reloadSetting() {
-			if (V) Log.v(TAG, "reloadSetting()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			Setting.load();
+
+			if (T) Log.v(TAG, M()+"@in");
 		}
 
 		@Override
 		public void receivePong() throws RemoteException {
-			if (V) Log.v(TAG, "receivePong()");
+			if (T) Log.v(TAG, M()+"@in");
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public void clearLowMemoryNotification() throws RemoteException {
-			if (V) Log.v(TAG, "clearLowMemoryNotice()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			clearNotification(NOTIFY_LOWMEMORY);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public String getVersionString() throws RemoteException {
-			if (V) Log.v(TAG, "getVersionString()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			try {
 				final String packageName = getPackageName();
 				final PackageInfo packageInfo = getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
 				final String version = packageInfo.versionName;
 				return version;
 			} catch (final NameNotFoundException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
+
+			if (T) Log.v(TAG, M()+"@out");
 			return null;
 		}
 
 		@Override
 		public int setPlayList(final String[] playList) throws RemoteException {
-			if (V) Log.v(TAG, "setPlayList()");
+			if (T) Log.v(TAG, M()+"@in: playList="+playList);
+
 			player.setPlayList(playList);
+
+			if (T) Log.v(TAG, M()+"@out");
 			return 0;
 		}
 
 		@Override
 		public int setPlayListAsFolder(final String path) throws RemoteException {
-			if (V) Log.v(TAG, "setPlayListAsFolder()");
+			if (T) Log.v(TAG, M()+"@in: path="+path);
+			if (T) Log.v(TAG, M()+"@out");
 			return 0;
 		}
 
 		@Override
 		public String[] getPlayList() throws RemoteException {
-			if (V) Log.v(TAG, "getPlayList()");
-			return player.getPlayList();
+			if (T) Log.v(TAG, M()+"@in");
+
+			String[] ret = player.getPlayList();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int setPlayNumber(final int n) throws RemoteException {
-			if (V) Log.v(TAG, "setPlayNumber()");
-			return (player.setPlayNumber(n) ? 1 : 0);
+			if (T) Log.v(TAG, M()+"@in: n="+n);
+
+			int ret = (player.setPlayNumber(n) ? 1 : 0);
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int setPlayNumberNext() throws RemoteException {
-			if (V) Log.v(TAG, "setPlayNumberNext()");
-			return (player.setPlayNumberNext() ? 1 : 0);
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = (player.setPlayNumberNext() ? 1 : 0);
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int setPlayNumberPrev() throws RemoteException {
-			if (V) Log.v(TAG, "setPlayNumberPrev()");
-			return (player.setPlayNumberPrev() ? 1 : 0);
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = (player.setPlayNumberPrev() ? 1 : 0);
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int getPlayNumber() throws RemoteException {
-			if (V) Log.v(TAG, "getPlayNumber()");
-			return player.getPlayNumber();
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = player.getPlayNumber();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int getDuration(final int n) throws RemoteException {
-			if (V) Log.v(TAG, "getDuration()");
-			return 0;
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = 0;
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public String getTitle(final int n) throws RemoteException {
-			if (V) Log.v(TAG, "getTitle()");
-			return "";
+			if (T) Log.v(TAG, M()+"@in");
+
+			String ret = "";
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public void setPlayAt(final int playat, final int loop, final int fadeout) throws RemoteException {
-			if (V) Log.v(TAG, "setPlayAt()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			player.setPlayAt(playat, loop, fadeout);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public int getPlayAt() throws RemoteException {
-			// if (V) Log.v(TAG, "getPlayAt()");
-			return player.getPlayAt();
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = player.getPlayAt();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int getCurrentDuration() throws RemoteException {
-			if (V) Log.v(TAG, "getCurrentDuration()");
-			return player.getCurrentDuration();
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = player.getCurrentDuration();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public String getCurrentTitle() throws RemoteException {
-			if (V) Log.v(TAG, "getCurrentTitle()");
-			return player.getCurrentTitle();
+			if (T) Log.v(TAG, M()+"@in");
+
+			String ret = player.getCurrentTitle();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int setPlay(final boolean f) throws RemoteException {
-			if (V) Log.v(TAG, "setPlay()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			player.setPlay(f);
+
+			if (T) Log.v(TAG, M()+"@out");
 			return 0;
 		}
 
 		@Override
 		public boolean getPlay() throws RemoteException {
-			if (V) Log.v(TAG, "getPlay()");
-			return player.getPlay();
+			if (T) Log.v(TAG, M()+"@in");
+
+			boolean ret = player.getPlay();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int setPause(final boolean f) throws RemoteException {
-			if (V) Log.v(TAG, "setPause()");
-			return 0;
+			if (T) Log.v(TAG, M()+"@in");
+
+			int ret = 0;
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public boolean getPause() throws RemoteException {
-			if (V) Log.v(TAG, "getPause()");
-			return false;
+			if (T) Log.v(TAG, M()+"@in");
+
+			boolean ret = false;
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public int playMusicFile(final String path) throws RemoteException {
-			if (V) Log.v(TAG, "playMusicFile()");
+			if (T) Log.v(TAG, M()+"@in: path="+path);
+
+			int ret = 0;
 			final String playList[] = new String[1];
 			playList[0] = path;
 			if (player.setPlayList(playList)) {
 				if (player.setPlayNumber(0)) {
 					player.setPlay(true);
-					return 1;
+					ret = 1;
 				}
 			}
-			return 0;
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public String getCurrentFileType() throws RemoteException {
-			if (V) Log.v(TAG, "getCurrentFileType()");
-			return player.getCurrentFileType();
+			if (T) Log.v(TAG, M()+"@in");
+
+			String ret = player.getCurrentFileType();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public String getCurrentFileName(final int id) throws RemoteException {
-			if (V) Log.v(TAG, "getCurrentFileName()");
-			return player.getCurrentFileName(id);
+			if (T) Log.v(TAG, M()+"@in: id="+id);
+
+			String ret = player.getCurrentFileName(id);
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public void setLastSelectedFileName(final String filename) throws RemoteException {
-			if (V) Log.v(TAG, "setLastSelectedFileName()");
+			if (T) Log.v(TAG, M()+"@in: filename="+filename);
+
 			player.setLastSelectedFileName(filename);
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
 		public String getLastSelectedFileName() throws RemoteException {
-			if (V) Log.v(TAG, "getLastSelectedFileName()");
-			return player.getLastSelectedFileName();
+			if (T) Log.v(TAG, M()+"@in");
+
+			String ret = player.getLastSelectedFileName();
+
+			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			return ret;
 		}
 
 		@Override
 		public void savePlayerStatus() throws RemoteException {
-			if (V) Log.v(TAG, "savePlayerStatus()");
+			if (T) Log.v(TAG, M()+"@in");
+
 			player.save();
+
+			if (T) Log.v(TAG, M()+"@out");
 		}
 	};
 
 }
+
+// [EOF]
