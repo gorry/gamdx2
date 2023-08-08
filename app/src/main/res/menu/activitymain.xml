@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+  xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:id="@+id/setting" android:title="@string/activitymain_xml_setting" android:titleCondensed="@string/activitymain_xml_setting_condense"></item>
+	<item android:id="@+id/help" android:title="@string/activitymain_xml_help" android:titleCondensed="@string/activitymain_xml_help_condense"></item>
+	<item android:id="@+id/version" android:title="@string/activitymain_xml_version" android:titleCondensed="@string/activitymain_xml_version_condense"></item>
+	<item android:id="@+id/quit" android:title="@string/activitymain_xml_quit" android:titleCondensed="@string/activitymain_xml_quit_condense"></item>
+</menu>

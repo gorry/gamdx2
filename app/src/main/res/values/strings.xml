@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="activitymain_xml_quit_condense">Shutdown</string>
+	<string name="activitymain_xml_quit">Shutdown</string>
+	<string name="activitymain_xml_help_condense">Help</string>
+	<string name="activitymain_xml_help">Help</string>
+	<string name="activitymain_xml_version_condense">Version</string>
+	<string name="activitymain_xml_version">Version</string>
+	<string name="activitymain_xml_setting_condense">Preference</string>
+	<string name="activitymain_xml_setting">Preference</string>
+	<string name="hello">Hello GAMDX!</string>
+	<string name="app_name">gamdx2</string>
+	<string name="app_title">GAMDX2: Android MXDRV Player</string>
+	<string name="copyright">Copyright (C)2000-2023 GORRY.\n\nBased on:\nX68k MXDRV music driver version 2.06+17 Rel.X5-S\n(c)1988-92 milk.,K.MAEKAWA, Missy.M, Yatsube</string>
+	<string name="activitymain_title">GAMDX - Android MXDRV Player</string>
+	<string name="activitysetting_title">GAMDX Setting</string>
+	<string name="musicplayerservice_java_shutdownmusicplayerservice">Terminate MXDRVG Service.</string>
+	<string name="musicplayerservice_java_restartmusicplayerservicebylowmemory">MXDRVG Service was Purged and Rebooted by "Low Memory".</string>
+	<string name="musicplayerservice_java_startmusicplayerservice">Start MXDRVG Service.</string>
+	<string name="musicplayerservice_java_onlowmemory">Memory Shortage for MXDRVG Service.</string>
+	<string name="activitymain_java_progress_changeconfiguration">Change Setting...</string>
+	<string name="activitymain_java_progress_bindservice">Connecting to MXDRVG Service...</string>
+	<string name="activityselectmdxfile_java_title">- Select MDX File</string>
+	<string name="layout_java_openbutton_text">Open File</string>
+	<string name="layout_java_shutdownbutton_text">Shutdown</string>
+	<string name="layout_java_playbutton_text">Play</string>
+	<string name="layout_java_stopbutton_text">Stop</string>
+	<string name="layout_java_nextbutton_text">Next &lt;&lt;</string>
+	<string name="layout_java_prevbutton_text">&gt;&gt; Prev</string>
+	<string name="pref_reboot_title">These setting will effects after restarting GAMDX.</string>
+	<string name="pref_analogfilter_title">Analog Effector</string>
+	<string name="pref_analogfilter_summary">Reproduce audio low-pass filter of X68000.</string>
+	<string name="pref_samplerate_title">Sampling Rate</string>
+	<string name="pref_samplerate_summary">Choose from 22k/44k/48k/62.5kHz: It is not good to change from default setting.</string>
+	<string name="pref_samplerate_dialogtitle">Sampling Rate</string>
+	<string name="pref_mdxrootpath_title">MXDRV Root Path</string>
+	<string name="pref_mdxrootpath_summary">existing MXDRV sub-folder (mdx/ and pdx/)</string>
+	<string name="pref_mdxrootpath_dialogtitle">MXDRV Root Path</string>
+	<string name="pref_buffersize_title">Sound Buffer Size</string>
+	<string name="pref_buffersize_summary">Change size to reduce skipping sound</string>
+	<string name="pref_buffersize_dialogtitle">Sound Buffer Size</string>
+
+
+
+
+</resources>

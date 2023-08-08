@@ -1,0 +1,3 @@
+[submodule "app/src/main/jni/portable_mdx"]
+	path = app/src/main/jni/portable_mdx
+	url = https://github.com/gorry/portable_mdx.git

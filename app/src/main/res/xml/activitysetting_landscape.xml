@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+  xmlns:android="http://schemas.android.com/apk/res/android">
+	<Preference
+		android:title="@string/pref_reboot_title"
+		style="@style/preference_mynotice"
+		/>
+	<EditTextPreference android:key="pref_mdxrootpath"
+		android:title="@string/pref_mdxrootpath_title"
+		android:summary="@string/pref_mdxrootpath_summary"
+		android:dialogTitle="@string/pref_mdxrootpath_dialogtitle"
+		android:singleLine="true"
+		/>
+	<CheckBoxPreference android:key="pref_analogfilter"
+		android:title="@string/pref_analogfilter_title"
+		android:summary="@string/pref_analogfilter_summary"
+		/>
+	<ListPreference android:key="pref_samplerate"
+		android:title="@string/pref_samplerate_title"
+		android:summary="@string/pref_samplerate_summary"
+		android:entries="@array/pref_samplerate_entries"
+		android:entryValues="@array/pref_samplerate_entryvalues"
+		android:dialogTitle="@string/pref_samplerate_dialogtitle"
+		/>
+	<ListPreference android:key="pref_buffersize"
+		android:title="@string/pref_buffersize_title"
+		android:summary="@string/pref_buffersize_summary"
+		android:entries="@array/pref_buffersize_entries"
+		android:entryValues="@array/pref_buffersize_entryvalues"
+		android:dialogTitle="@string/pref_buffersize_dialogtitle"
+		/>
+</PreferenceScreen>

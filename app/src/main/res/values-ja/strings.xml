@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="activitymain_xml_quit_condense">終了</string>
+	<string name="activitymain_xml_quit">終了</string>
+	<string name="activitymain_xml_help_condense">ヘルプ</string>
+	<string name="activitymain_xml_help">ヘルプ</string>
+	<string name="activitymain_xml_version_condense">バージョン</string>
+	<string name="activitymain_xml_version">バージョン</string>
+	<string name="activitymain_xml_setting_condense">環境設定</string>
+	<string name="activitymain_xml_setting">環境設定</string>
+	<string name="hello">Hello GAMDX!</string>
+	<string name="app_name">gamdx</string>
+	<string name="app_title">GAMDX: Android MXDRV Player</string>
+	<string name="copyright">Copyright (C)2000-2011 GORRY.\n\nBased on:\nX68k MXDRV music driver version 2.06+17 Rel.X5-S\n(c)1988-92 milk.,K.MAEKAWA, Missy.M, Yatsube</string>
+	<string name="activitymain_title">GAMDX - Android MXDRV Player</string>
+	<string name="activitysetting_title">GAMDXの設定</string>
+	<string name="musicplayerservice_java_shutdownmusicplayerservice">音楽サービスを終了しました。</string>
+	<string name="musicplayerservice_java_restartmusicplayerservicebylowmemory">メモリ不足のため音楽サービスがパージされ、再起動しました。</string>
+	<string name="musicplayerservice_java_startmusicplayerservice">音楽サービスを開始しました。</string>
+	<string name="musicplayerservice_java_onlowmemory">音楽サービス用メモリが不足しています。</string>
+	<string name="activitymain_java_progress_changeconfiguration">設定の反映中です…</string>
+	<string name="activitymain_java_progress_bindservice">音楽サービスと接続中です…</string>
+	<string name="activityselectmdxfile_java_title">- MDXファイルの選択</string>
+	<string name="layout_java_openbutton_text">ファイルを開く</string>
+	<string name="layout_java_shutdownbutton_text">終了</string>
+	<string name="layout_java_playbutton_text">♪再生</string>
+	<string name="layout_java_stopbutton_text">■停止</string>
+	<string name="layout_java_nextbutton_text">次＞＞</string>
+	<string name="layout_java_prevbutton_text">＜＜前</string>
+	<string name="pref_reboot_title">以下は再起動後に有効となります。</string>
+	<string name="pref_analogfilter_title">アナログ音声の再現</string>
+	<string name="pref_analogfilter_summary">X68000の標準的なオーディオ低域フィルタを再現します。</string>
+	<string name="pref_samplerate_title">再生レート</string>
+	<string name="pref_samplerate_summary">22k/44k/48k/62.5kから選択できますが、初期設定値以外では正常に演奏されないことがあります。</string>
+	<string name="pref_samplerate_dialogtitle">再生レート</string>
+	<string name="pref_mdxrootpath_title">MXDRVルートパス</string>
+	<string name="pref_mdxrootpath_summary">"mdx/"や"pdx/"のあるフォルダのパスを指定します。</string>
+	<string name="pref_mdxrootpath_dialogtitle">MXDRVルートパス</string>
+	<string name="pref_buffersize_title">発声バッファサイズ</string>
+	<string name="pref_buffersize_summary">値を変更すると音の途切れを解消できることがあります。</string>
+	<string name="pref_buffersize_dialogtitle">発声バッファサイズ</string>
+
+
+
+
+</resources>

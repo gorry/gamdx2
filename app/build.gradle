@@ -1,0 +1,71 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'net.gorry.gamdx'
+
+    compileSdk 33
+    // buildToolsVersion "23.0.2"
+
+    defaultConfig {
+        applicationId "net.gorry.gamdx2"
+        minSdkVersion 14
+        targetSdk 22
+        versionCode 202308081
+        versionName "2023.0808.1"
+        testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            ndkBuild {
+                cppFlags ''
+            }
+        }
+        ndk {
+            abiFilters "armeabi-v7a", "x86", "arm64-v8a", "x86_64"
+        }
+    }
+
+    buildTypes {
+        release {
+            signingConfig null
+            debuggable false
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+        debug {
+            signingConfig null
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+
+    apply from: 'signingConfigs.gradle'
+
+    flavorDimensions "server"
+    productFlavors {
+        master {
+            dimension "server"
+            // applicationIdSuffix ".master"
+            signingConfig signingConfigs.master
+        }
+        develop {
+            dimension "server"
+            applicationIdSuffix ".develop"
+            signingConfig signingConfigs.develop
+        }
+    }
+
+    externalNativeBuild {
+        ndkBuild {
+            path file('src/main/jni/Android.mk')
+        }
+    }
+}
+
+dependencies {
+
+    implementation 'androidx.appcompat:appcompat:1.6.1'
+}
