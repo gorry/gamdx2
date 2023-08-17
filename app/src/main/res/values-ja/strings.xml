@@ -33,12 +33,14 @@
 	<string name="pref_samplerate_title">再生レート</string>
 	<string name="pref_samplerate_summary">22k/44k/48k/62.5kから選択できますが、初期設定値以外では正常に演奏されないことがあります。</string>
 	<string name="pref_samplerate_dialogtitle">再生レート</string>
-	<string name="pref_mdxrootpath_title">MXDRVルートパス</string>
-	<string name="pref_mdxrootpath_summary">"mdx/"や"pdx/"のあるフォルダのパスを指定します。</string>
-	<string name="pref_mdxrootpath_dialogtitle">MXDRVルートパス</string>
+	<string name="pref_mdxrooturi_title">MXDRVルートフォルダ</string>
+	<string name="pref_mdxrooturi_summary">"mdx/"や"pdx/"のあるフォルダのパスを指定します。</string>
+	<string name="pref_mdxrooturi_dialogtitle">MXDRVルートフォルダ</string>
 	<string name="pref_buffersize_title">発声バッファサイズ</string>
 	<string name="pref_buffersize_summary">値を変更すると音の途切れを解消できることがあります。</string>
 	<string name="pref_buffersize_dialogtitle">発声バッファサイズ</string>
+	<string name="msg_open_document_tree_mxdrv_folder">次のダイアログで、MXDRVデータが収められているルートフォルダを選択してください。選択したフォルダ以下のMDX/PDXファイルのみを開くことができます。</string>
+	<string name="title_open_document_tree_mxdrv_folder">Select MXDRV folder</string>
 
 
 

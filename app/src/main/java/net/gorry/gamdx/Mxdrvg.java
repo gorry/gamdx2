@@ -7,17 +7,24 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 
 import net.gorry.ndk.LibraryLoader;
 import net.gorry.ndk.Natives;
+
+import android.content.ContentResolver;
+import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Process;
 import android.util.Log;
+
+import androidx.documentfile.provider.DocumentFile;
 
 /**
  * @author gorry
@@ -26,7 +33,7 @@ import android.util.Log;
 public class Mxdrvg implements Natives.EventListener {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "Mxdrvg";
-	private static final boolean T = true; //false;
+	private static final boolean T = false;
 	private static final boolean V = false;
 	private static final boolean D = false;
 	private static final boolean I = !RELEASE;
@@ -39,10 +46,10 @@ public class Mxdrvg implements Natives.EventListener {
 
 	private MxdrvgEventListener[] mListeners = new MxdrvgEventListener[0];
 
-	private String mMdxFileName;
-	private String mPdxFileName;
+	private Uri mMdxFileUri;
+	private Uri mPdxFileUri;
 	private String mMdxTitle;
-	private String mPdxFolderName;
+	private Uri mPdxFolderUri;
 	private int mMasterVolume = 256;
 
 	private int mMxdrvgWaveDeltaSize = 256*4;
@@ -71,6 +78,8 @@ public class Mxdrvg implements Natives.EventListener {
 
 	private Thread mAudioThread = null;
 	private boolean mLibraryLoaded = false;
+
+	private Context mContext;
 
 	/**
 	 * コンストラクタ
@@ -163,13 +172,25 @@ public class Mxdrvg implements Natives.EventListener {
 	}
 
 	/**
-	 * PDXパス設定
-	 * @param pdxPath PDXパス
+	 * コンテントリゾルバ設定
+	 * @param c コンテントリゾルバ
 	 */
-	public void setPdxPath(final String pdxPath) {
-		if (T) Log.v(TAG, M()+"@in: pdxpath="+pdxPath);
+	public void setContext(final Context c) {
+		if (T) Log.v(TAG, M()+"@in: c="+c);
 
-		mPdxFolderName = pdxPath;
+		mContext = c;
+
+		if (T) Log.v(TAG, M()+"@out");
+	}
+
+	/**
+	 * PDXパス設定
+	 * @param pdxUri PDXディレクトリのURI
+	 */
+	public void setPdxFolderUri(final Uri pdxUri) {
+		if (T) Log.v(TAG, M()+"@in: pdxUri="+pdxUri);
+
+		mPdxFolderUri = pdxUri;
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -241,7 +262,7 @@ public class Mxdrvg implements Natives.EventListener {
 
 							@Override
 							public void onPeriodicNotification(final AudioTrack track) {
-								if (T) Log.v(TAG, M()+"@in: track="+track);
+								// if (T) Log.v(TAG, M()+"@in: track="+track);
 								// if (D) Log.d(TAG, "Mxdrvg(): run(): onPeriodicNotification(): mBufferRest="+mBufferRest);
 								Process.setThreadPriority(Process.THREAD_PRIORITY_URGENT_AUDIO);
 
@@ -253,7 +274,7 @@ public class Mxdrvg implements Natives.EventListener {
 									mAudioTrack.write(mWaveBuffer, 0, mAudioBufferDeltaSize*2);
 								}
 
-								if (T) Log.v(TAG, M()+"@out");
+								// if (T) Log.v(TAG, M()+"@out");
 							}
 						}
 				);
@@ -297,7 +318,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 * バッファにオーディオデータを注入
 	 */
 	public void fillAudioTrack() {
-		if (T) Log.v(TAG, M()+"@in");
+		// if (T) Log.v(TAG, M()+"@in");
 
 		if (V) Log.v(TAG, M()+"mAudioBufferOfs="+mAudioBufferOfs+", mAudioBufferDeltaSize="+mAudioBufferDeltaSize);
 		while (mAudioBufferOfs < mAudioBufferDeltaSize) {
@@ -319,7 +340,7 @@ public class Mxdrvg implements Natives.EventListener {
 		}
 		mAudioBufferOfs -= mAudioBufferDeltaSize;
 
-		if (T) Log.v(TAG, M()+"@out");
+		// if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
@@ -496,59 +517,60 @@ public class Mxdrvg implements Natives.EventListener {
 
 	/**
 	 * MDXファイルの読み込み
-	 * @param mdxPath MDXファイル名
+	 * @param mdxUri MDXファイルのURI
 	 * @param infoonly 情報取得のみを行うときはtrue
 	 * @return 成功ならtrue
 	 */
-	public boolean loadMdxFile(final String mdxPath, final boolean infoonly) {
-		if (T) Log.v(TAG, M()+"@in: mdxPath="+mdxPath+", infoonly="+infoonly);
+	public boolean loadMdxFile(final Uri mdxUri, final boolean infoonly) {
+		if (T) Log.v(TAG, M()+"@in: mdxUri="+mdxUri+", infoonly="+infoonly);
 
-		byte[] mdxFile = null;
-		byte[] pdxFile = null;
+		byte[] mdxFileBin = null;
+		byte[] pdxFileBin = null;
 		int mdxFileSize = 0;
 		int pdxFileSize = 0;
 		int pos;
 
-		mMdxFileName = null;
-		mPdxFileName = null;
+		mMdxFileUri = null;
+		mPdxFileUri = null;
+		ContentResolver contentResolver = mContext.getContentResolver();
 
 		try {
-			final FileInputStream fin = new FileInputStream(mdxPath);
+			final InputStream fin = contentResolver.openInputStream(mdxUri);
 			mdxFileSize = fin.available();
-			mdxFile = new byte[mdxFileSize];
-			fin.read(mdxFile);
+			mdxFileBin = new byte[mdxFileSize];
+			fin.read(mdxFileBin);
 			fin.close();
 		} catch (final FileNotFoundException e) {
-			Log.e(TAG, M()+"MDX File [" + mdxPath + "] not found");
+			Log.e(TAG, M()+"MDX File [" + ActivitySelectMdxFile.getStringFromUri(mMdxFileUri) + "] not found");
 			return false;
 		} catch (final IOException e) {
 			e.printStackTrace();
 			return false;
 		}
 		if (mdxFileSize == 0) {
-			Log.e(TAG, M()+"MDX File [" + mdxPath + "] size error");
+			Log.e(TAG, M()+"MDX File [" + ActivitySelectMdxFile.getStringFromUri(mMdxFileUri) + "] size error");
 			return false;
 		}
 
 		try {
 			pos = 0;
 			while (pos < mdxFileSize) {
-				if (mdxFile[pos] == 0x0d) break;
-				if (mdxFile[pos] == 0x0a) break;
+				if (mdxFileBin[pos] == 0x0d) break;
+				if (mdxFileBin[pos] == 0x0a) break;
 				pos++;
 			}
 			if (pos >= mdxFileSize) throw new IndexOutOfBoundsException("Scan Title");
 			final int titleEndPos = pos;
 
 			while (pos < mdxFileSize) {
-				if (mdxFile[pos] == 0x1a) break;
+				if (mdxFileBin[pos] == 0x1a) break;
 				pos++;
 			}
 			if (pos >= mdxFileSize) throw new IndexOutOfBoundsException("Scan After Title");
 			int pdxStartPos = pos;
 
 			while (pos < mdxFileSize) {
-				if (mdxFile[pos] == 0x00) break;
+				if (mdxFileBin[pos] == 0x00) break;
 				pos++;
 			}
 			if (pos >= mdxFileSize) throw new IndexOutOfBoundsException("Scan PDX Name");
@@ -560,78 +582,57 @@ public class Mxdrvg implements Natives.EventListener {
 			final int mdxBodyStartPos = pos;
 			final int mdxBodySize = mdxFileSize - mdxBodyStartPos;
 
-			mMdxTitle = getShiftJisStringFromByteArray(mdxFile, 0, titleEndPos);
+			mMdxTitle = getShiftJisStringFromByteArray(mdxFileBin, 0, titleEndPos);
 
-			final String mdxFolder = mdxPath.substring(0, mdxPath.lastIndexOf('/')) + "/";
+			DocumentFile mdxfile = DocumentFile.fromSingleUri(mContext, mdxUri);
+			DocumentFile mdxdir = ActivitySelectMdxFile.getParentFolder(mContext, mdxfile);
+			Uri pdxUri = null;
 			String pdxName = "";
-			String pdxFileName;
+			DocumentFile pdxFile = null;
 			if (pdxEndPos-pdxStartPos > 0) {
-				pdxName = getShiftJisStringFromByteArray(mdxFile, pdxStartPos, pdxEndPos-pdxStartPos);
+				pdxName = getShiftJisStringFromByteArray(mdxFileBin, pdxStartPos, pdxEndPos-pdxStartPos);
 			}
 
-			File f;
 			boolean havePdx = true;
-			if ((pdxName == null)||(pdxName.length() == 0)) {
-				havePdx = false;
-				pdxFileName = null;
-			} else {
-				pdxFileName = mdxFolder + pdxName;
-				f = new File(pdxFileName);
-				if (!f.exists()) {
-					pdxFileName = mdxFolder + pdxName.toLowerCase();
-					f = new File(pdxFileName);
-					if (!f.exists()) {
-						pdxFileName = mdxFolder + pdxName + ".pdx";
-						f = new File(pdxFileName);
-						if (!f.exists()) {
-							pdxFileName = mdxFolder + pdxName.toLowerCase() + ".pdx";
-							f = new File(pdxFileName);
-							if (!f.exists()) {
-								pdxFileName = mPdxFolderName + pdxName;
-								f = new File(pdxFileName);
-								if (!f.exists()) {
-									pdxFileName = mPdxFolderName + pdxName.toLowerCase();
-									f = new File(pdxFileName);
-									if (!f.exists()) {
-										pdxFileName = mPdxFolderName + pdxName + ".pdx";
-										f = new File(pdxFileName);
-										if (!f.exists()) {
-											pdxFileName = mPdxFolderName + pdxName.toLowerCase() + ".pdx";
-											f = new File(pdxFileName);
-											if (!f.exists()) {
-												pdxFileName = null;
-												havePdx = false;
-											}
-										}
-									}
-								}
-							}
+			if ((pdxName != null) && (pdxName.length() > 0)) {
+				// MDXフォルダ内のPDXファイルを探す
+				pdxFile = findPdxFile(pdxName, mdxdir);
+				if (pdxFile == null) {
+					if (mPdxFolderUri != null) {
+						// PDXフォルダ内のPDXファイルを探す
+						DocumentFile pdxdir = DocumentFile.fromTreeUri(mContext, mPdxFolderUri);
+						if (pdxdir != null) {
+							pdxFile = findPdxFile(pdxName, pdxdir);
 						}
 					}
 				}
+			}
+			if (pdxFile == null) {
+				havePdx = false;
 			}
 
 			int pdxDataSize = 0;
 			byte[] pdxData = null;
 			if (havePdx) {
 				try {
-					final FileInputStream fin = new FileInputStream(pdxFileName);
+					pdxUri = pdxFile.getUri();
+					final InputStream fin = contentResolver.openInputStream(pdxUri);
 					pdxFileSize = fin.available();
 					if (pdxFileSize == 0) {
-						if (V) Log.v(TAG, "PDX File [" + pdxFileName + "] not found");
+						if (V) Log.v(TAG, "PDX File [" + pdxUri + "] not found");
 						havePdx = false;
 					} else {
 						if (!infoonly) {
-							pdxFile = new byte[pdxFileSize];
-							fin.read(pdxFile);
+							pdxFileBin = new byte[pdxFileSize];
+							fin.read(pdxFileBin);
 						}
 					}
 					fin.close();
 				} catch (final FileNotFoundException e) {
-					if (V) Log.v(TAG, "PDX File [" + pdxFileName + "] not found");
+					if (V) Log.v(TAG, "PDX File [" + pdxUri + "] not found");
 					havePdx = false;
 				} catch (final IOException e) {
-					if (V) Log.v(TAG, "PDX File [" + pdxFileName + "] load error");
+					if (V) Log.v(TAG, "PDX File [" + pdxUri + "] load error");
 					havePdx = false;
 				}
 			}
@@ -648,7 +649,7 @@ public class Mxdrvg implements Natives.EventListener {
 				pdxData[7] = 0x02;
 				pdxData[8] = 0x00;
 				pdxData[9] = 0x00;
-				System.arraycopy(pdxFile, 0, pdxData, 10, pdxFileSize);
+				System.arraycopy(pdxFileBin, 0, pdxData, 10, pdxFileSize);
 			}
 
 			final int mdxDataSize = mdxBodySize + 8 + 2;
@@ -663,10 +664,10 @@ public class Mxdrvg implements Natives.EventListener {
 			mdxData[7] = 0x08;
 			mdxData[8] = 0x00;
 			mdxData[9] = 0x00;
-			System.arraycopy(mdxFile, mdxBodyStartPos, mdxData, 10, mdxBodySize);
+			System.arraycopy(mdxFileBin, mdxBodyStartPos, mdxData, 10, mdxBodySize);
 
-			mMdxFileName = mdxPath;
-			mPdxFileName = pdxFileName;
+			mMdxFileUri = mdxUri;
+			mPdxFileUri = pdxUri;
 
 			mPauseMxdrvg = true;
 			mStopMxdrvg = true;
@@ -682,12 +683,13 @@ public class Mxdrvg implements Natives.EventListener {
 			pdxData = null;
 			mDuration = Natives.mxdrvgMeasurePlayTime(2, 1);
 		} catch (final IndexOutOfBoundsException e) {
-			Log.e(TAG, M()+"failed: MDX File [" + mdxPath + "] "+e.getMessage());
+			Log.e(TAG, M()+"failed: MDX File [" + ActivitySelectMdxFile.getStringFromUri(mdxUri) + "] "+e.getMessage());
 			return false;
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
 		return true;
+
 	}
 
 	/**
@@ -886,15 +888,50 @@ public class Mxdrvg implements Natives.EventListener {
 		String ret = null;
 		switch (id) {
 			case 0:
-				ret = mMdxFileName;
+				ret = ActivitySelectMdxFile.getStringFromUri(mMdxFileUri);
 				break;
 			case 1:
-				ret = mPdxFileName;
+				ret = ActivitySelectMdxFile.getStringFromUri(mPdxFileUri);
 				break;
 		}
 
 		if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return ret;
+	}
+
+	private DocumentFile findPdxFile(String pdxName, DocumentFile dir) {
+		if (T) Log.v(TAG, M()+"@in: pdxName="+pdxName+", dir="+dir);
+
+		DocumentFile pdxFile = null;
+		pdxFile = dir.findFile(pdxName);
+		if ((pdxFile == null) || (!pdxFile.exists())) {
+			final int extpos = pdxName.lastIndexOf('.');
+			if (extpos >= 0) {
+				pdxName = pdxName.substring(0, extpos);
+			}
+			pdxFile = dir.findFile(pdxName+".PDX");
+			if ((pdxFile == null) || (!pdxFile.exists())) {
+				pdxFile = dir.findFile(pdxName+".pdx");
+				if ((pdxFile == null) || (!pdxFile.exists())) {
+					pdxFile = dir.findFile(pdxName.toUpperCase()+".PDX");
+					if ((pdxFile == null) || (!pdxFile.exists())) {
+						pdxFile = dir.findFile(pdxName.toUpperCase()+".pdx");
+						if ((pdxFile == null) || (!pdxFile.exists())) {
+							pdxFile = dir.findFile(pdxName.toLowerCase()+".PDX");
+							if ((pdxFile == null) || (!pdxFile.exists())) {
+								pdxFile = dir.findFile(pdxName.toLowerCase()+".pdx");
+								if ((pdxFile == null) || (!pdxFile.exists())) {
+									pdxFile = null;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		if (T) Log.v(TAG, M()+"@out: pdxFile="+pdxFile);
+		return pdxFile;
 	}
 
 }

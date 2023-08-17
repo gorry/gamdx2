@@ -6,10 +6,14 @@ package net.gorry.gamdx;
 import java.io.File;
 import java.io.FileFilter;
 import java.io.FilenameFilter;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 import android.app.ListActivity;
+import android.content.Context;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -17,6 +21,8 @@ import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
+
+import androidx.documentfile.provider.DocumentFile;
 
 /**
  * 
@@ -39,21 +45,86 @@ public class ActivitySelectMdxFile extends ListActivity {
 		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
 	}
 
-	private String mCurrentFolderName = "";
-	private File mCurDir;
-	private File[] mDirEntry;
-	private File[] mDirs;
-	private File[] mFiles;
+	private final ArrayList<DocumentFile> mDirEntry = new ArrayList<DocumentFile>();
+	private final ArrayList<DocumentFile> mDirs = new ArrayList<DocumentFile>();
+	private final ArrayList<DocumentFile> mFiles = new ArrayList<DocumentFile>();
+	private DocumentFile mCurrentDir;
 	private SelectMdxFileAdapter mAdapter;
 	private String mExtFilenameFilter;
-	private String mCurrentFileName;
-	private String mLastFolderName = "";
+	private Uri mCurrentDirUri;
+	private Uri mCurrentFileUri;
+	private Uri mLastDirUri;
 	private Thread mThreadGetInfoTask = null;
 
 	@SuppressWarnings("unused")
 	private boolean mSelected = false;
 	@SuppressWarnings("unused")
 	private int mCurPos = 0;
+
+	private Context me;
+
+	private static Uri mRootFolderUri;
+
+	public static String getStringFromUri(Uri uri) {
+		if (T) Log.v(TAG, M()+"@in: uri="+uri);
+
+		String uristr = "";
+		if (uri != null) {
+			uristr = uri.toString();
+		}
+
+		if (T) Log.v(TAG, M()+"@out: uristr="+uristr);
+		return uristr;
+	}
+
+	public static Uri getUriFromString(String uristr) {
+		if (T) Log.v(TAG, M()+"@in: uristr="+uristr);
+
+		Uri uri = null;
+		if ((uristr != null) && (uristr.length() > 0)) {
+			uri = Uri.parse(uristr);
+		}
+
+		if (T) Log.v(TAG, M()+"@out: uri="+uri);
+		return uri;
+	}
+
+	public static DocumentFile getParentFolder(Context context, DocumentFile file) {
+		if (T) Log.v(TAG, M()+"@in: context="+context+", file="+file);
+
+		Uri rootFolderUri = Setting.mdxRootUri;
+		if (rootFolderUri == null) {
+			Log.e(TAG, M()+"failed: mdxRootUri is null");
+			return null;
+		}
+		DocumentFile fileParent = DocumentFile.fromTreeUri(context, rootFolderUri);
+		Uri uri = file.getUri();
+		String uriStr = getStringFromUri(uri);
+
+		String uriStrRoot = getStringFromUri(rootFolderUri);
+		if (!uriStr.startsWith(uriStrRoot)) {
+			if (D) Log.v(TAG, M()+"not in RootFolder");
+			return fileParent;
+		}
+		String uriStrParent = uriStrRoot;
+		int idx = uriStr.lastIndexOf("%2F");
+		if (idx < uriStrRoot.length()) {
+			if (D) Log.v(TAG, M()+"parent is RootFolder");
+		} else {
+			uriStrParent = uriStr.substring(0, idx);
+		}
+
+		uri = getUriFromString(uriStrParent);
+		DocumentFile file2 = DocumentFile.fromTreeUri(context, uri);
+		if (file2 == null) {
+			if (D) Log.v(TAG, M()+"parent is null");
+		} else {
+			fileParent = file2;
+		}
+
+		if (T) Log.v(TAG, M()+"@out: parent="+fileParent);
+		return fileParent;
+	}
 
 	/* アプリの一時退避
 	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
@@ -62,9 +133,9 @@ public class ActivitySelectMdxFile extends ListActivity {
 	protected void onSaveInstanceState(final Bundle outState) {
 		if (T) Log.v(TAG, M()+"@in: outState="+outState);
 
-		outState.putString("mCurrentFolderName", mCurrentFolderName);
-		outState.putString("mCurrentFileName", mCurrentFileName);
-		outState.putString("mLastFolderName", mLastFolderName);
+		outState.putString("mCurrentDirUri", getStringFromUri(mCurrentDirUri));
+		outState.putString("mCurrentFileUri", getStringFromUri(mCurrentFileUri));
+		outState.putString("mLastDirUri", getStringFromUri(mLastDirUri));
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -77,146 +148,120 @@ public class ActivitySelectMdxFile extends ListActivity {
 	protected void onRestoreInstanceState(final Bundle savedInstanceState) {
 		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
 
-		mCurrentFolderName = savedInstanceState.getString("mCurrentFolderName");
-		mCurrentFileName = savedInstanceState.getString("mCurrentFileName");
-		mLastFolderName = savedInstanceState.getString("mLastFolderName");
+		mCurrentDirUri = getUriFromString(savedInstanceState.getString("mCurrentDirUri"));
+		mCurrentFileUri = getUriFromString(savedInstanceState.getString("mCurrentFileUri"));
+		mLastDirUri = getUriFromString(savedInstanceState.getString("mLastDirUri"));
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
-	 * 拡張子フィルタ
-	 * @param ext 拡張子
-	 * @return 拡張子にマッチしたらtrue
-	 */
-	public FilenameFilter extNameFilter(final String ext) {
-		if (T) Log.v(TAG, M()+"@in: ext="+ext);
-
-		mExtFilenameFilter = new String(ext.toLowerCase());
-		FilenameFilter filter = new FilenameFilter() {
-			@Override
-			public boolean accept(final File dir, final String name) {
-				if (T) Log.v(TAG, M()+"@in: dir="+dir+", name="+name);
-
-				final File file = new File(dir.getPath() + "/" + name);
-				if (file.isDirectory()) {
-					return false;
-				}
-				final String lname = name.toLowerCase();
-				boolean ret = lname.endsWith(mExtFilenameFilter);
-
-				if (T) Log.v(TAG, M()+"@out: ret="+ret);
-				return ret;
-			}
-		};
-
-		if (T) Log.v(TAG, M()+"@out: filter="+filter);
-		return filter;
-	}
-
-	/**
-	 * ディレクトリフィルタ
-	 * @return ディレクトリならtrue
-	 */
-	public static FileFilter dirEntryFilter() {
-		return new FileFilter() {
-			@Override
-			public boolean accept(final File file) {
-				return !(file.isFile());
-			}
-		};
-	}
-
-	/**
-	 * ソート用比較
-	 */
-	public class compareFileName implements Comparator<File> {
-		@Override
-		public int compare(final File f1, final File f2) {
-			return (f1.getName().compareToIgnoreCase(f2.getName()));
-		}
-
-		/**
-		 * @param f1 エントリ1
-		 * @param f2 エントリ2
-		 * @return 比較結果
-		 */
-		public boolean equals(final File f1, final File f2) {
-			return (f1.getName().equalsIgnoreCase(f2.getName()));
-		}
-	}
-
-	/**
-	 * @param uri uri
+	 * フォルダの一覧をとる
+	 * @param uri フォルダを示すURI
 	 */
 	public void setFileList(final Uri uri) {
 		if (T) Log.v(TAG, M()+"@in: uri="+uri);
 
-		// フォルダ一覧＋指定拡張子ファイル一覧
-		final String path = uri.getPath();
-		final int idx = path.lastIndexOf('/');
-		final String folder;
-		final String filename;
-		if (idx >= 0) {
-			folder = path.substring(0, idx+1);
-			filename = path.substring(idx+1);
-		} else {
-			folder = "/";
-			filename = "";
+		// uriがフォルダのときの処理
+		mCurrentDir = DocumentFile.fromTreeUri(this, uri);
+		if (mCurrentDir != null) {
+			if (mCurrentDir.isDirectory()) {
+				mCurrentDirUri = uri;
+				mCurrentFileUri = null;
+			} else {
+				mCurrentDir = null;
+			}
 		}
-		mCurrentFolderName = folder;
-		mCurDir = new File(folder);
-		mCurrentFileName = filename;
-		final Comparator<File> c1 = new compareFileName();
-		mDirs = mCurDir.listFiles(dirEntryFilter());
-		if (mDirs == null) {
-			mDirs = new File[0];
-		}
-		Arrays.sort(mDirs, c1);
-		mFiles = mCurDir.listFiles(extNameFilter(".mdx"));
-		if (mFiles == null) {
-			mFiles = new File[0];
-		}
-		Arrays.sort(mFiles, c1);
-		final File upDir = new File(folder + "..");
-		mDirEntry = new File[1 + mDirs.length + mFiles.length];
-		mDirEntry[0] = upDir;
-		System.arraycopy(mDirs, 0, mDirEntry, 1, mDirs.length);
-		System.arraycopy(mFiles, 0, mDirEntry, 1+mDirs.length, mFiles.length);
 
-		int curpos = -1;
-		if ((mLastFolderName != null) && (mLastFolderName.length() > 0+1)) {
-			// ".."を選んだあと、今までいたフォルダを初期位置にする
-			final String s1 = mLastFolderName.substring(0, mLastFolderName.length()-1);
-			final int i1 = s1.lastIndexOf('/');
-			if (i1 >= 0) {
-				final String s2 = s1.substring(i1+1);
-				if (s2.length() > 0) {
-					for (int i=0; i<mDirEntry.length; i++) {
-						if (mDirEntry[i].getName().equals(s2)) {
-							curpos = i;
-							break;
-						}
-					}
+		// uriがフォルダでないときの処理
+		if (mCurrentDir == null) {
+			DocumentFile curfile = DocumentFile.fromSingleUri(this, uri);
+			if (curfile == null) {
+				Log.e(TAG, M()+"failed: uri is invalid: "+uri);
+				return;
+			}
+			mCurrentDir = getParentFolder(me, curfile);
+			mCurrentDirUri = mCurrentDir.getUri();
+			mCurrentFileUri = uri;
+		}
+
+		// とりあえず一覧をとる
+		mCurrentDirUri = uri;
+		mDirEntry.clear();
+		mDirs.clear();
+		mFiles.clear();
+		List<DocumentFile> filesall = Arrays.asList(mCurrentDir.listFiles());
+
+		// 親フォルダが自分と同じ（＝ルート）でなければ".."を最初にmDirEntryに追加する
+		boolean hasParentFolder = false;
+		DocumentFile parent = getParentFolder(me, mCurrentDir);
+		if (!parent.getUri().equals(mCurrentDir.getUri())) {
+			mDirEntry.add(parent);
+			hasParentFolder = true;
+		}
+
+		Comparator comparator = new Comparator<DocumentFile>() {
+			@Override
+			public int compare(DocumentFile a, DocumentFile b) {
+				return a.getUri().compareTo(b.getUri());
+			}
+		};
+
+		// フォルダをmDirEntryに追加する
+		mDirs.clear();
+		for (int i=0; i<filesall.size(); i++) {
+			DocumentFile f = filesall.get(i);
+			if (f.isDirectory()) {
+				mDirs.add(f);
+			}
+		}
+		Collections.sort(mDirs, comparator);
+		mDirEntry.addAll(mDirs);
+
+		// MDXファイルをmDirEntryに追加する
+		mFiles.clear();
+		for (int i=0; i<filesall.size(); i++) {
+			DocumentFile f = filesall.get(i);
+			if (!f.isDirectory()) {
+				String name = f.getName().toLowerCase();
+				if (name.endsWith(".mdx")) {
+					mFiles.add(f);
 				}
 			}
 		}
-		if (curpos < 0) {
-			for (int i=0; i<mDirEntry.length; i++) {
-				if (mDirEntry[i].getName().equals(mCurrentFileName)) {
-					curpos = i;
+		Collections.sort(mFiles, comparator);
+		mDirEntry.addAll(mFiles);
+
+		// カーソルの位置を決定する
+		int mCurPos = -1;
+		if (mLastDirUri != null) {
+			for (int i=0; i<mDirEntry.size(); i++) {
+				DocumentFile f = mDirEntry.get(i);
+				if (f.getUri().equals(mLastDirUri)) {
+					mCurPos = i;
 					break;
 				}
 			}
 		}
-		mCurPos = curpos;
-		mAdapter = new SelectMdxFileAdapter(this, mDirEntry, curpos);
-		setListAdapter(mAdapter);
-
-		if (curpos >= 0) {
-			getListView().setSelection(curpos);
+		if (mCurrentFileUri != null) {
+			for (int i=0; i<mDirEntry.size(); i++) {
+				DocumentFile f = mDirEntry.get(i);
+				if (f.getUri().equals(mCurrentFileUri)) {
+					mCurPos = i;
+					break;
+				}
+			}
+		}
+		if (mCurPos < 0) {
+			mCurPos = 0;
 		}
 
+		// リストビューを作成する
+		mAdapter = new SelectMdxFileAdapter(this, mDirEntry, mCurPos, hasParentFolder);
+		setListAdapter(mAdapter);
+		getListView().setSelection(mCurPos);
+
+		// リストビューの情報更新タスクを発行
 		invokeThreadGetInfoTask();
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -227,6 +272,7 @@ public class ActivitySelectMdxFile extends ListActivity {
 		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
 
 		super.onCreate(savedInstanceState);
+		me = this;
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -271,26 +317,29 @@ public class ActivitySelectMdxFile extends ListActivity {
 		Uri uri;
 		final Intent intent = getIntent();
 		uri = intent.getData();
-		if ((mCurrentFolderName != null) && (mCurrentFolderName.length() > 0)) {
-			if ((mCurrentFileName != null) && (mCurrentFileName.length() > 0)) {
-				uri = Uri.parse("file://" + mCurrentFolderName + mCurrentFileName);
-			} else {
-				uri = Uri.parse("file://" + mCurrentFolderName);
-			}
+
+		// URIを決定してファイル一覧を得る
+		if (mCurrentFileUri != null) {
+			uri = mCurrentFileUri;
 		}
-		if (uri == null) {
-			uri = Uri.parse("file://" + Setting.mdxRootPath);
+		if (mCurrentDirUri != null) {
+			uri = mCurrentDirUri;
+		}
+		if (uri != null) {
+			uri = Setting.mdxRootUri;
 		}
 		setFileList(uri);
 
+		// "listOnly"がONなら、そのファイルを選択したことにして終了する
 		final Bundle extras = intent.getExtras();
 		if (extras != null) {
 			if (extras.getBoolean("listOnly")) {
 				final Intent intent2 = new Intent();
 				int selected = 0;
 				final String findName = extras.getString("selectedFileName").toLowerCase();
-				for (int i=0; i<mFiles.length; i++) {
-					if (mFiles[i].getName().equalsIgnoreCase(findName)) {
+				for (int i=0; i<mFiles.size(); i++) {
+					DocumentFile file = mFiles.get(i);
+					if (file.getName().equalsIgnoreCase(findName)) {
 						selected = i;
 						break;
 					}
@@ -360,28 +409,25 @@ public class ActivitySelectMdxFile extends ListActivity {
 	 * リストから選択
 	 */
 	@Override
-	public void onListItemClick(final ListView l, final View v, final int position, final long id) {
-		if (T) Log.v(TAG, M()+"@in: l="+l+", v="+v+", position="+position+", id="+id);
+	public void onListItemClick(final ListView l, final View v, final int pos, final long id) {
+		if (T) Log.v(TAG, M()+"@in: l="+l+", v="+v+", pos="+pos+", id="+id);
 
-		final File file = mDirEntry[position];
-		if (V) Log.v(TAG, "Selected [" + file.getPath() + "]");
+		final DocumentFile file = mDirEntry.get(pos);
+		if (V) Log.v(TAG, "Selected [" + getStringFromUri(file.getUri()) + "]");
 		waitEndThreadGetInfoTask();
 
-		if (file.isDirectory() || (file.getName().equals(".."))) {
-			Uri uri = Uri.parse("file://" + file.getPath() + "/");
-			final String name = file.getName();
-			mLastFolderName = "";
-			if (name.equals("..")) {
-				uri = Uri.parse("file://" + file.getParentFile().getParent() + "/");
-				mLastFolderName = mCurrentFolderName;
-			}
+		mLastDirUri = mCurrentDirUri;
+		if (file.isDirectory()) {
+			// フォルダを選択
+			Uri uri = file.getUri();
 			setFileList(uri);
 			mySetTitle(uri);
 		} else {
-			mLastFolderName = "";
+			// ファイルを選択
+			mLastDirUri = null;
 			mSelected = true;
 			final Intent intent = new Intent();
-			makeIntentReturnFiles(intent, mFiles, position-mDirs.length-1);
+			makeIntentReturnFiles(intent, mFiles, pos-mDirs.size());
 			setResult(RESULT_OK, intent);
 			finish();
 		}
@@ -393,17 +439,17 @@ public class ActivitySelectMdxFile extends ListActivity {
 	 * 返却Intent用のファイル一覧を作成
 	 * @param intent Intent
 	 * @param files ファイル一覧
-	 * @param selected 選択項目
+	 * @param selpos 選択項目
 	 */
-	public void makeIntentReturnFiles(final Intent intent, final File[] files, final int selected) {
-		if (T) Log.v(TAG, M()+"@in: intent="+intent+", files="+files+", selected="+selected);
+	public void makeIntentReturnFiles(final Intent intent, final ArrayList<DocumentFile> files, final int selpos) {
+		if (T) Log.v(TAG, M()+"@in: intent="+intent+", files="+files+", selpos="+selpos);
 
-		intent.putExtra("path", files[selected].getPath());
-		intent.putExtra("folder", mCurrentFolderName);
-		intent.putExtra("nselect", selected);
-		intent.putExtra("nfiles", files.length);
-		for (int i=0; i<files.length; i++) {
-			intent.putExtra("file"+i, files[i].getPath());
+		intent.putExtra("uri", getStringFromUri(files.get(selpos).getUri()));
+		intent.putExtra("folder", getStringFromUri(mCurrentDirUri));
+		intent.putExtra("nselect", selpos);
+		intent.putExtra("nuris", files.size());
+		for (int i=0; i<files.size(); i++) {
+			intent.putExtra("uri_"+i, getStringFromUri(files.get(i).getUri()));
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -416,7 +462,7 @@ public class ActivitySelectMdxFile extends ListActivity {
 	public void mySetTitle(final Uri uri) {
 		if (T) Log.v(TAG, M()+"@in: uri="+uri);
 
-		final String path = uri.getPath();
+		final String path = getStringFromUri(uri);
 		final int idx = path.lastIndexOf('/');
 		final String folder;
 		if (idx >= 0) {
@@ -445,18 +491,19 @@ public class ActivitySelectMdxFile extends ListActivity {
 		public void run() {
 			if (T) Log.v(TAG, M()+"@in");
 
-			for (int i=0; i<mDirEntry.length; i++) {
+			for (int i=0; i<mDirEntry.size(); i++) {
 				if (T) Log.v(TAG, M()+"i="+i);
 				if (mGetInfoTaskInterrupt) {
 					if (T) Log.v(TAG, M()+"interrupted");
 					break;
 				}
-				final File file = mDirEntry[i];
+				final DocumentFile file = mDirEntry.get(i);
 				if (file.isDirectory()) {
 					continue;
 				}
-				Mxdrvg mxdrvg = new Mxdrvg(22050, 0, 1024*64, 0);
-				if (mxdrvg.loadMdxFile(file.getPath(), true)) {
+				Mxdrvg mxdrvg = new Mxdrvg(22050, 0, 1024*1024, 0);
+				mxdrvg.setContext(me);
+				if (mxdrvg.loadMdxFile(file.getUri(), true)) {
 					mAdapter.setDescs(i, mxdrvg.getTitle());
 					mHandle.post(mListUpdater);
 				}

@@ -33,12 +33,14 @@
 	<string name="pref_samplerate_title">Sampling Rate</string>
 	<string name="pref_samplerate_summary">Choose from 22k/44k/48k/62.5kHz: It is not good to change from default setting.</string>
 	<string name="pref_samplerate_dialogtitle">Sampling Rate</string>
-	<string name="pref_mdxrootpath_title">MXDRV Root Path</string>
-	<string name="pref_mdxrootpath_summary">existing MXDRV sub-folder (mdx/ and pdx/)</string>
-	<string name="pref_mdxrootpath_dialogtitle">MXDRV Root Path</string>
+	<string name="pref_mdxrooturi_title">MXDRV Root Path</string>
+	<string name="pref_mdxrooturi_summary">existing MXDRV sub-folder (mdx/ and pdx/)</string>
+	<string name="pref_mdxrooturi_dialogtitle">MXDRV Root Path</string>
 	<string name="pref_buffersize_title">Sound Buffer Size</string>
 	<string name="pref_buffersize_summary">Change size to reduce skipping sound</string>
 	<string name="pref_buffersize_dialogtitle">Sound Buffer Size</string>
+	<string name="msg_open_document_tree_mxdrv_folder">Select the root folder containing the MXDRV data at the next dialog. You can ONLY open MDX/PDX files in selected folder.</string>
+	<string name="title_open_document_tree_mxdrv_folder">Select MXDRV folder</string>
 
 
 

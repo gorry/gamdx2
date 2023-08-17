@@ -5,7 +5,13 @@ package net.gorry.gamdx;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.util.Log;
+
+import androidx.documentfile.provider.DocumentFile;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author gorry
@@ -25,12 +31,12 @@ public class MusicPlayer {
 		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
 	}
 
-	private final Context me;
+	private Context me;
 
 	private MusicPlayerEventListener[] mListeners = new MusicPlayerEventListener[0];
 
-	private String mLastSelectedFileName = "";
-	private String[] mPlayList = null;
+	private Uri mLastSelectedFileUri = null;
+	private Uri[] mPlayList = new Uri[0];
 	private int mPlayNumber;
 
 	private Mxdrvg mMxdrvg = null;
@@ -45,9 +51,12 @@ public class MusicPlayer {
 		if (T) Log.v(TAG, M()+"@in: context="+context+", connect="+connect);
 
 		me = context;
-		mMxdrvg = new Mxdrvg(Setting.sampleRate, (Setting.analogFilter ? 3 : 1), 1024*64, 1024*1024);
+		DocumentFile mdxRootDir = DocumentFile.fromTreeUri(me, Setting.mdxRootUri);
+		DocumentFile pdxDir = mdxRootDir.findFile("pdx");
+		mMxdrvg = new Mxdrvg(Setting.sampleRate, (Setting.analogFilter ? 3 : 1), 1024*1024, 1024*1024*2);
+		mMxdrvg.setContext(me);
 		mMxdrvg.addEventListener(new MxdrvgListener());
-		mMxdrvg.setPdxPath(Setting.mdxRootPath + "pdx/");
+		mMxdrvg.setPdxFolderUri(pdxDir.getUri());
 		mMxdrvg.attachAudioTrack();
 		mMxdrvg.attachMonitorTimer();
 
@@ -76,16 +85,12 @@ public class MusicPlayer {
 
 		final SharedPreferences pref = me.getSharedPreferences("musicplayer", 0);
 		final SharedPreferences.Editor editor = pref.edit();
-		if (mPlayList == null) {
-			editor.putInt("PlayListSize", 0);
-		} else {
-			editor.putInt("PlayListSize", mPlayList.length);
-			for (int i=0; i<mPlayList.length; i++) {
-				editor.putString("PlayList_"+i, mPlayList[i]);
-			}
+		editor.putInt("PlayListSize", mPlayList.length);
+		for (int i=0; i<mPlayList.length; i++) {
+			editor.putString("PlayList_"+i, ActivitySelectMdxFile.getStringFromUri(mPlayList[i]));
 		}
 		editor.putInt("PlayNumber", mPlayNumber);
-		editor.putString("LastSelectedFileName", mLastSelectedFileName);
+		editor.putString("LastSelectedFileName", ActivitySelectMdxFile.getStringFromUri(mLastSelectedFileUri));
 
 		editor.commit();
 
@@ -100,16 +105,15 @@ public class MusicPlayer {
 
 		final SharedPreferences pref = me.getSharedPreferences("musicplayer", 0);
 		final int playListSize = pref.getInt("PlayListSize", 0);
-		if (playListSize == 0) {
-			mPlayList = null;
-		} else {
-			mPlayList = new String[playListSize];
-			for (int i=0; i<playListSize; i++) {
-				mPlayList[i] = pref.getString("PlayList_"+i, "");
-			}
+		mPlayList = new Uri[playListSize];
+		for (int i=0; i<playListSize; i++) {
+			String uristr = pref.getString("PlayList_"+i, "");
+			Uri uri = ActivitySelectMdxFile.getUriFromString(uristr);
+			mPlayList[i] = uri;
 		}
 		mPlayNumber = pref.getInt("PlayNumber", 0);
-		mLastSelectedFileName = pref.getString("LastSelectedFileName", "");
+		String uristr = pref.getString("LastSelectedFileName", "");
+		mLastSelectedFileUri = ActivitySelectMdxFile.getUriFromString(uristr);
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -143,7 +147,7 @@ public class MusicPlayer {
 				mListeners[i].timerEvent(playAt);
 			}
 
-			if (T) Log.v(TAG, M()+"@out");
+			// if (T) Log.v(TAG, M()+"@out");
 		}
 	}
 
@@ -207,14 +211,18 @@ public class MusicPlayer {
 
 	/**
 	 * ファイルリストを与える
-	 * @param playList MDXファイルのリスト
+	 * @param playList MDXファイルのUri文字列のリスト
 	 * @return 成功なら1
 	 */
 	public boolean setPlayList(final String[] playList) {
 		if (T) Log.v(TAG, M()+"@in: playList="+playList);
 
 		setPlay(false);
-		mPlayList = playList;
+		mPlayList = new Uri[playList.length];
+		for (int i=0; i<playList.length; i++) {
+			Uri uri = ActivitySelectMdxFile.getUriFromString(playList[i]);
+			mPlayList[i] = uri;
+		}
 		boolean ret = setPlayNumber(0);
 
 		if (T) Log.v(TAG, M()+"@out: ret="+ret);
@@ -226,8 +234,16 @@ public class MusicPlayer {
 	 * @return MDXファイルのリスト
 	 */
 	public String[] getPlayList() {
-		if (T) Log.v(TAG, M()+"@out: mPlayList="+mPlayList);
-		return mPlayList;
+		if (T) Log.v(TAG, M()+"@in");
+
+		String[] playList = new String[mPlayList.length];
+		for (int i=0; i<mPlayList.length; i++) {
+			String uristr = ActivitySelectMdxFile.getStringFromUri(mPlayList[i]);
+			playList[i] = uristr;
+		}
+
+		if (T) Log.v(TAG, M()+"@out: playList="+playList);
+		return playList;
 	}
 
 	/**
@@ -238,7 +254,7 @@ public class MusicPlayer {
 	public boolean setPlayNumber(final int n) {
 		if (T) Log.v(TAG, M()+"@in: n="+n);
 
-		if ((mPlayList == null) || (mPlayList.length == 0)) {
+		if (mPlayList.length == 0) {
 			if (T) Log.v(TAG, M()+"@out: false");
 			return false;
 		}
@@ -247,16 +263,15 @@ public class MusicPlayer {
 			return false;
 		}
 		mPlayNumber = n;
-		if (mPlayList != null) {
-			if (!mPlayList[mPlayNumber].equals("")) {
-				final boolean f = mMxdrvg.loadMdxFile(mPlayList[mPlayNumber], false);
-				if (f) {
-					for (int i=mListeners.length-1; i>=0; i--) {
-						mListeners[i].acceptMusicFile();
-					}
-					if (T) Log.v(TAG, M()+"@out: true");
-					return true;
+		Uri uri = mPlayList[mPlayNumber];
+		if (uri != null) {
+			final boolean f = mMxdrvg.loadMdxFile(uri, false);
+			if (f) {
+				for (int i=mListeners.length-1; i>=0; i--) {
+					mListeners[i].acceptMusicFile();
 				}
+				if (T) Log.v(TAG, M()+"@out: true");
+			return true;
 			}
 		}
 
@@ -338,7 +353,7 @@ public class MusicPlayer {
 	 */
 	public int getPlayAt() {
 		int ret = mMxdrvg.getPlayAt();
-		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		// if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return ret;
 	}
 
@@ -406,23 +421,23 @@ public class MusicPlayer {
 	}
 
 	/**
-	 * 最後に選択したファイルのファイル名を設定する
-	 * @param filename ファイル名
+	 * 最後に選択したファイルのURIを設定する
+	 * @param uri URI
 	 */
-	public void setLastSelectedFileName(final String filename) {
-		if (T) Log.v(TAG, M()+"@in: filename="+filename);
+	public void setLastSelectedFileUri(final Uri uri) {
+		if (T) Log.v(TAG, M()+"@in: uri="+uri);
 
-		mLastSelectedFileName = filename;
+		mLastSelectedFileUri = uri;
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	/**
-	 * 最後に選択したファイルのファイル名を得る
-	 * @return ファイル名
+	 * 最後に選択したファイルのURIを得る
+	 * @return URI
 	 */
-	public String getLastSelectedFileName() {
-		String ret = mLastSelectedFileName;
+	public Uri getLastSelectedFileUri() {
+		Uri ret = mLastSelectedFileUri;
 		if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return ret;
 	}

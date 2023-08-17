@@ -107,20 +107,20 @@ public class DoMain {
 		if (T) Log.v(TAG, M()+"@in");
 
 		final Intent intent = new Intent(
-				me,
-				ActivitySelectMdxFile.class
+			me,
+			ActivitySelectMdxFile.class
 		);
-		String lastPath = null;
+		String uristr = null;
 		try {
-			lastPath = ActivityMain.iMusicPlayerService.getLastSelectedFileName();
+			uristr = ActivityMain.iMusicPlayerService.getLastSelectedFileName();
 		} catch (final RemoteException e) {
-			lastPath = null;
+			uristr = null;
 		}
-		if ((lastPath == null) || (lastPath.length() == 0)) {
-			lastPath = Setting.mdxRootPath;
+		if ((uristr == null) || (uristr.length() == 0)) {
+			uristr = ActivitySelectMdxFile.getStringFromUri(Setting.mdxRootUri);
 		}
 
-		final Uri uri = Uri.parse("file://" + lastPath);
+		final Uri uri = ActivitySelectMdxFile.getUriFromString(uristr);
 		intent.setData(uri);
 		me.startActivityForResult(intent, ActivityMain.ACTIVITY_SELECT_MDX);
 

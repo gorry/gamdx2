@@ -1,7 +1,9 @@
 package net.gorry.gamdx;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -14,6 +16,8 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.util.Log;
+
+import androidx.documentfile.provider.DocumentFile;
 
 /**
  * @author gorry
@@ -34,14 +38,15 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	}
 
 	private final LayoutInflater mInflater;
-	private final File[] mFiles;
-	private final String[] mTypes;
-	private final String[] mDescs;
+	private ArrayList<DocumentFile> mFiles = new ArrayList<DocumentFile>();
+	private ArrayList<String> mTypes = new ArrayList<String>();
+	private ArrayList<String> mDescs = new ArrayList<String>();
 	private final HashMap<String, String> typeTable = new HashMap<String, String>();
 
 	private final Bitmap mFolderIcon;
 	private final Bitmap mMdxIcon;
 	private final int mHighlightPos;
+	private boolean mHasParentFolder;
 
 
 	/**
@@ -49,23 +54,25 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	 * @param files files
 	 * @param pos pos
 	 */
-	public SelectMdxFileAdapter(final Context context, final File[] files, final int pos) {
-		if (T) Log.v(TAG, M()+"@in: context="+context+", files="+files+", pos="+pos);
+	public SelectMdxFileAdapter(final Context context, ArrayList<DocumentFile> files, final int pos, boolean hasParentFolder) {
+		if (T) Log.v(TAG, M()+"@in: context="+context+", files="+files+", pos="+pos+", hasParentFolder="+hasParentFolder);
 
+		mHasParentFolder = hasParentFolder;
 		mHighlightPos = ((pos < 0) ? 0 : pos);
 		mInflater = LayoutInflater.from(context);
 
 		mFiles = files;
-		mTypes = new String[files.length];
-		mDescs = new String[files.length];
+		mTypes.clear();
+		mDescs.clear();
 
 		typeTable.put("mdx", "audio/x-mdx");
 
-		for (int i=0; i<files.length; i++) {
-			final File file = files[i];
+		for (int i=0; i<files.size(); i++) {
+			final DocumentFile file = files.get(i);
 
 			if (file.isDirectory()) {
-				mTypes[i] = "text/directory";
+				mTypes.add("text/directory");
+				mDescs.add("");
 				continue;
 			}
 
@@ -73,9 +80,11 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 			final int extpos = filename.lastIndexOf('.');
 			if (extpos >= 0) {
 				final String ext = filename.substring(extpos + 1);
-				mTypes[i] = typeTable.get(ext);
+				mTypes.add(typeTable.get(ext));
+				mDescs.add("");
 			} else {
-				mTypes[i] = null;
+				mTypes.add(null);
+				mDescs.add("");
 			}
 		}
 
@@ -87,7 +96,7 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 
 	@Override
 	public int getCount() {
-		return mFiles.length;
+		return mFiles.size();
 	}
 
 	@Override
@@ -107,46 +116,47 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 	}
 
 	/**
-	 * @param position position
+	 * @param pos position
 	 * @return type
 	 */
-	public String getType(final int position) {
-		if ((position < 0) || (position >= mTypes.length)) {
+	public String getType(final int pos) {
+		if ((pos < 0) || (pos >= mTypes.size())) {
 			return null;
 		}
-		return mTypes[position];
+		return mTypes.get(pos);
 	}
 
 	/**
-	 * @param position position
+	 * @param pos position
 	 * @return desc
 	 */
-	public String getDescs(final int position) {
-		if ((position < 0) || (position >= mTypes.length)) {
-			return null;
+	public String getDescs(final int pos) {
+		if ((pos < 0) || (pos >= mDescs.size())) {
+			return "";
 		}
-		return mDescs[position];
+		return mDescs.get(pos);
 	}
 
 	/**
-	 * @param position position
+	 * @param pos position
 	 * @param desc desc
 	 */
-	public void setDescs(final int position, final String desc) {
-		if (T) Log.v(TAG, M()+"@in: position="+position+", desc="+desc);
-
-		mDescs[position] = desc;
+	public void setDescs(final int pos, final String desc) {
+		if (T) Log.v(TAG, M()+"@in: pos="+pos+", desc="+desc);
+		if ((pos >= 0) && (pos < mDescs.size())) {
+			mDescs.set(pos, desc);
+		}
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
 
 	@Override
-	public View getView(final int position, final View convertView, final ViewGroup parent) {
-		if (T) Log.v(TAG, M()+"in: position="+position+", convertView="+convertView+", parent="+parent);
+	public View getView(final int pos, final View convertView, final ViewGroup parent) {
+		if (T) Log.v(TAG, M()+"in: pos="+pos+", convertView="+convertView+", parent="+parent);
 
 		ViewHolder holder;
 		View v;
-		final File file = mFiles[position];
+		final DocumentFile file = mFiles.get(pos);
 		Bitmap b;
 
 		if (convertView == null) {
@@ -164,8 +174,11 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 		}
 
 		String viewName = file.getName();
-		if (file.isDirectory() || (file.getName().equals(".."))) {
+		if (file.isDirectory()) {
 			b = mFolderIcon;
+			if ((pos == 0) && (mHasParentFolder)) {
+				viewName = "..";
+			}
 			viewName += "/";
 			holder.name.setText(viewName);
 			holder.name.setTextColor(Color.CYAN);
@@ -175,11 +188,11 @@ public class SelectMdxFileAdapter extends BaseAdapter {
 			b = mMdxIcon;
 			holder.name.setText(viewName);
 			holder.name.setTextColor(Color.WHITE);
-			holder.desc.setText(mDescs[position]);
+			holder.desc.setText(getDescs(pos));
 			holder.desc.setVisibility(View.VISIBLE);
 		}
 		holder.icon.setImageBitmap(b);
-		if (position == mHighlightPos) {
+		if (pos == mHighlightPos) {
 			v.setBackgroundColor(Color.argb(128,128,128,128));
 		} else {
 			v.setBackgroundColor(Color.TRANSPARENT);

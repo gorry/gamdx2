@@ -49,7 +49,9 @@ interface IMusicPlayerService {
 	/**
 	 * フォルダをプレイリストとして設置
 	 */
-	int setPlayListAsFolder(String path);
+ /*
+	int setPlayListAsFolder(String folder);
+*/
 
 	/**
 	 * プレイリストの読み出し
@@ -129,7 +131,7 @@ interface IMusicPlayerService {
 	/**
 	 * 音楽ファイルの演奏
 	 */
-	int playMusicFile(String path);
+	int playMusicFile(String uristr);
 
 	/**
 	 * ファイルタイプの取得

@@ -5,10 +5,10 @@
 		android:title="@string/pref_reboot_title"
 		style="@style/preference_mynotice"
 		/>
-	<EditTextPreference android:key="pref_mdxrootpath"
-		android:title="@string/pref_mdxrootpath_title"
-		android:summary="@string/pref_mdxrootpath_summary"
-		android:dialogTitle="@string/pref_mdxrootpath_dialogtitle"
+	<EditTextPreference android:key="pref_mdxrooturi"
+		android:title="@string/pref_mdxrooturi_title"
+		android:summary="@string/pref_mdxrooturi_summary"
+		android:dialogTitle="@string/pref_mdxrooturi_dialogtitle"
 		android:singleLine="true"
 		/>
 	<CheckBoxPreference android:key="pref_analogfilter"

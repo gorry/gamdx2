@@ -1,27 +1,36 @@
 package net.gorry.gamdx;
 
 import java.io.File;
+import java.util.ArrayList;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+
+import androidx.documentfile.provider.DocumentFile;
 
 /**
  * 
@@ -34,8 +43,8 @@ public class ActivityMain extends Activity {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "ActivityMain";
 	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
+	private static final boolean V = true; //false;
+	private static final boolean D = true; //false;
 	private static final boolean I = !RELEASE;
 
 	private static String M() {
@@ -48,6 +57,8 @@ public class ActivityMain extends Activity {
 	public static final int ACTIVITY_SETTING = 1;
 	/** */
 	public static final int ACTIVITY_SELECT_MDX = 2;
+	/** */
+	public static final int ACTION_OPEN_DOCUMENT_TREE = 3;
 
 	/** */
 	private static Activity me;
@@ -94,6 +105,42 @@ public class ActivityMain extends Activity {
 		if (T) Log.v(TAG, M()+"@out");
 	}
 
+	private Uri getMdxRootUri() {
+		if (T) Log.v(TAG, M()+"@in");
+
+		final SharedPreferences pref = getSharedPreferences("setting", 0);
+		final String uristr = pref.getString(Setting.name_mdxRootUri, "");
+		Uri mdxRootUri = ActivitySelectMdxFile.getUriFromString(uristr);
+
+		return mdxRootUri;
+	}
+
+	private void dialogSelectMxdrvDocumentTree() {
+		if (T) Log.v(TAG, M()+"@in");
+
+		new AlertDialog.Builder(this)
+			.setTitle(R.string.title_open_document_tree_mxdrv_folder)
+			.setMessage(R.string.msg_open_document_tree_mxdrv_folder)
+			.setCancelable(false)
+			.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+				@Override
+				public void onClick(DialogInterface dialog, int which) {
+					if (T) Log.v(TAG, M()+"@in: dialog="+dialog+", which="+which);
+
+					Intent intent2 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+					// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
+					// mdxRootUri = ActivitySelectMdxFile.getUriFromString("file://"+path);
+					// intent2.putExtra(DocumentsContract.EXTRA_INITIAL_URI, mdxRootUri);
+					startActivityForResult(intent2, ACTION_OPEN_DOCUMENT_TREE);
+
+					if (T) Log.v(TAG, M()+"@out");
+				}
+			})
+			.show();
+
+		if (T) Log.v(TAG, M()+"@out");
+	}
+
 	/*
 	 * 作成
 	 * @see android.app.Activity#onCreate(android.os.Bundle)
@@ -122,6 +169,10 @@ public class ActivityMain extends Activity {
 		final Intent intent = getIntent();
 		if (intent != null) {
 			mStartIntent = intent;
+		}
+
+		if (Setting.mdxRootUri == null) {
+			dialogSelectMxdrvDocumentTree();
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -186,6 +237,11 @@ public class ActivityMain extends Activity {
 
 		super.onResume();
 
+		if (Setting.mdxRootUri == null) {
+			if (T) Log.v(TAG, M()+"@out: not selected mdxRootUri");
+			return;
+		}
+
 		resume_iMusicPlayerService();
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -200,6 +256,12 @@ public class ActivityMain extends Activity {
 		if (T) Log.v(TAG, M()+"@in");
 
 		super.onPause();
+
+		if (Setting.mdxRootUri == null) {
+			if (T) Log.v(TAG, M()+"@out: not selected mdxRootUri");
+			return;
+		}
+
 		try {
 			resume_iMusicPlayerService();
 			if (iMusicPlayerService != null) {
@@ -221,6 +283,12 @@ public class ActivityMain extends Activity {
 		if (T) Log.v(TAG, M()+"@in");
 
 		super.onStop();
+
+		if (Setting.mdxRootUri == null) {
+			if (T) Log.v(TAG, M()+"@out: not selected mdxRootUri");
+			return;
+		}
+
 		if (mShutdownServiceOnDestroy) {
 			mShutdownServiceOnDestroy = false;
 			unregisterReceiver(mReceiver);
@@ -380,7 +448,7 @@ public class ActivityMain extends Activity {
 	public class MusicPlayerServiceReceiver extends BroadcastReceiver {
 		@Override
 		public synchronized void onReceive(final Context context, final Intent intent) {
-			if (T) Log.v(TAG, M()+"@in: context="+context+", intent="+intent);
+			// if (T) Log.v(TAG, M()+"@in: context="+context+", intent="+intent);
 
 			final Bundle extras = intent.getExtras();
 			final int msg = extras.getInt("msg");
@@ -409,7 +477,7 @@ public class ActivityMain extends Activity {
 				}
 			}
 
-			if (T) Log.v(TAG, M()+"@out");
+			// if (T) Log.v(TAG, M()+"@out");
 		}
 	}
 
@@ -599,9 +667,6 @@ public class ActivityMain extends Activity {
 		if (T) Log.v(TAG, M()+"@in: requestCode="+requestCode+", resultCode="+resultCode+", data="+data);
 
 		super.onActivityResult(requestCode, resultCode, data);
-		if (V) Log.v(TAG, "onActivityResult()");
-
-		resume_iMusicPlayerService();
 
 		Bundle extras = null;
 		int intentResult = 0;
@@ -616,37 +681,64 @@ public class ActivityMain extends Activity {
 			case ACTIVITY_SETTING:
 				if (V) Log.v(TAG, M()+"ACTIVITY_SETTING");
 				if (intentResult >= 0) {
-					net.gorry.gamdx.Setting.load();
+					Setting.load();
 				}
 				break;
 
 			case ACTIVITY_SELECT_MDX:
 				if (V) Log.v(TAG, M()+"ACTIVITY_SELECT_MDX");
 				if (extras != null) {
-					final String path = extras.getString("path");
-					@SuppressWarnings("unused")
-					final String folder = extras.getString("folder");
+					final Uri uri = ActivitySelectMdxFile.getUriFromString(extras.getString("uri"));
 					final int nselect = extras.getInt("nselect");
-					final int nfiles = extras.getInt("nfiles");
-					final String[] files = new String[nfiles];
-					for (int i=0; i<nfiles; i++) {
-						files[i] = extras.getString("file"+i);
+					final int nuris = extras.getInt("nuris");
+					final String[] playlist = new String[nuris];
+					for (int i=0; i<nuris; i++) {
+						playlist[i] = extras.getString("uri_"+i);
 					}
 					try {
-						iMusicPlayerService.setPlayList(files);
+						iMusicPlayerService.setPlayList(playlist);
 						iMusicPlayerService.setPlayNumber(nselect);
 						iMusicPlayerService.setPlay(true);
 						/*
 						iMusicPlayerService.playMusicFile(path);
 						 */
-						iMusicPlayerService.setLastSelectedFileName(path);
+						String uristr = ActivitySelectMdxFile.getStringFromUri(uri);
+						iMusicPlayerService.setLastSelectedFileName(uristr);
 						iMusicPlayerService.savePlayerStatus();
 					} catch (final RemoteException e) {
 						e.printStackTrace();
 					}
 				}
 				break;
+
+			case ACTION_OPEN_DOCUMENT_TREE:
+				if (V) Log.v(TAG, M()+"ACTION_OPEN_DOCUMENT_TREE");
+				if (resultCode != RESULT_OK) {
+					if (Setting.mdxRootUri == null) {
+						if (T) Log.v(TAG, M()+"@out: not selected mdxRootUri");
+						finish();
+						return;
+					}
+				}
+				if (data.getData() == null) {
+					if (T) Log.v(TAG, M()+"@out: not received treeUri");
+					finish();
+					return;
+				}
+
+				Uri treeUri = data.getData();
+				DocumentFile file = DocumentFile.fromTreeUri(this, treeUri);
+				getContentResolver().takePersistableUriPermission(
+					treeUri,
+					Intent.FLAG_GRANT_READ_URI_PERMISSION
+				);
+				Setting.mdxRootUri = file.getUri();
+				Setting.save();
+
+				break;
 		}
+
+		resume_iMusicPlayerService();
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -665,21 +757,22 @@ public class ActivityMain extends Activity {
 				if (uristr.length() > 0) {  // URIデータがある
 					final Uri uri = Uri.parse(uristr);
 					if (uri != null) {  // uriがvalid
-						final File file = new File(uri.getPath());
+						final DocumentFile file = DocumentFile.fromSingleUri(this, uri);
 						if (file.isFile()) {  // fileがファイル
-							final String path = file.getPath();
-							if (path.length() >= 5) {  // ファイル名が５文字以上
-								if (path.substring(path.length()-4).equalsIgnoreCase(".mdx")) {  // 拡張子が".MDX"
+							final String name = file.getName().toLowerCase();
+							if (name.length() >= 5) {  // ファイル名が５文字以上
+								if (name.endsWith(".mdx")) {  // 拡張子が".MDX"
+
+									if (Setting.mdxRootUri == null) {
+										return;
+									}
 									final Intent intent2 = new Intent(
 											me,
 											ActivitySelectMdxFile.class
 									);
-									final String dirname = file.getParent() + "/";
-									final String filename = file.getName();
-									final Uri uri2 = Uri.parse("file://"+dirname);
-									intent2.setData(uri2);
+									intent2.setData(uri);
 									intent2.putExtra("listOnly", true);
-									intent2.putExtra("selectedFileName", filename);
+									intent2.putExtra("selectedFileName", name);
 									startActivityForResult(intent2, ActivityMain.ACTIVITY_SELECT_MDX);
 								}
 							}

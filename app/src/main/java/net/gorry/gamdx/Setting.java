@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
 
@@ -31,7 +32,6 @@ public class Setting {
 
 	private static Context me = null;
 	private static boolean isLandscape = false;
-	private static String mDefMdxRootPath;
 
 	/** */
 	public static int verbose;
@@ -42,8 +42,8 @@ public class Setting {
 	private static String name_rotateMode = "rotatemode";
 
 	/** */
-	public static String mdxRootPath;
-	private static String name_mdxRootPath = "mdxrootpath";
+	public static Uri mdxRootUri;
+	public static String name_mdxRootUri = "mdxrooturi";
 
 	/** */
 	public static boolean analogFilter;
@@ -70,7 +70,7 @@ public class Setting {
 
 		editor.remove(name_rotateMode);
 
-		editor.remove(name_mdxRootPath);
+		editor.remove(name_mdxRootUri);
 		editor.remove(name_analogFilter);
 		editor.remove(name_sampleRate);
 		editor.remove(name_bufferSize);
@@ -92,9 +92,8 @@ public class Setting {
 
 		rotateMode = pref.getInt(name_rotateMode, 0);
 
-		mDefMdxRootPath = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
-		mdxRootPath = pref.getString(name_mdxRootPath, mDefMdxRootPath);
-		checkMdxRootPath();
+		mdxRootUri = ActivitySelectMdxFile.getUriFromString(pref.getString(name_mdxRootUri, ""));
+		checkMdxRootUri();
 
 		analogFilter = pref.getBoolean(name_analogFilter, true);
 
@@ -111,18 +110,20 @@ public class Setting {
 	}
 
 	/**
-	 * mdxRootPathの内容チェック
+	 * mdxRootUriの内容チェック
 	 */
-	public static void checkMdxRootPath() {
+	public static void checkMdxRootUri() {
 		if (T) Log.v(TAG, M()+"@in");
 
-		if (mdxRootPath.length() == 0) {
+/*
+		if (mdxRootUri.length() == 0) {
 			// 空のときは初期値に戻す
-			mdxRootPath = mDefMdxRootPath;
-		} else if (!(mdxRootPath.substring(mdxRootPath.length()-1).equals("/"))) {
+			mdxRootUri = mDefMdxRootUri;
+		} else if (!(mdxRootUri.substring(mdxRootUri.length()-1).equals("/"))) {
 			// "/"で終わってなかったら追加
-			mdxRootPath += "/";
+			mdxRootUri += "/";
 		}
+*/
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -140,7 +141,7 @@ public class Setting {
 
 		editor.putInt(name_rotateMode, rotateMode);
 
-		editor.putString(name_mdxRootPath, mdxRootPath);
+		editor.putString(name_mdxRootUri, ActivitySelectMdxFile.getStringFromUri(mdxRootUri));
 		editor.putBoolean(name_analogFilter, analogFilter);
 		editor.putInt(name_sampleRate, sampleRate);
 		editor.putInt(name_bufferSize, bufferSize);
@@ -202,16 +203,16 @@ public class Setting {
 
 		final int back_verbose = verbose;
 		final int back_rotateMode = rotateMode;
-		final String  back_mdxRootPath = mdxRootPath;
+		final String back_mdxRootUriStr = ActivitySelectMdxFile.getStringFromUri(mdxRootUri);
 		// final boolean back_analogFilter = analogFilter;
 		// final int back_sampleRate = sampleRate;
 
-		verbose = sp_getInt(sp, "pref_sys_"+name_verbose, verbose);
+		verbose = sp_getInt(sp, "pref_sys_"+name_verbose, back_verbose);
 
-		rotateMode = sp_getInt(sp, "pref_sys_"+name_rotateMode, rotateMode);
+		rotateMode = sp_getInt(sp, "pref_sys_"+name_rotateMode, back_rotateMode);
 
-		mdxRootPath = sp_getString(sp, "pref_"+name_mdxRootPath, mdxRootPath);
-		checkMdxRootPath();
+		mdxRootUri = ActivitySelectMdxFile.getUriFromString(sp_getString(sp, "pref_"+name_mdxRootUri, back_mdxRootUriStr));
+		checkMdxRootUri();
 
 		analogFilter = sp_getBoolean(sp, "pref_"+name_analogFilter, analogFilter);
 		sampleRate = sp_getInt(sp, "pref_"+name_sampleRate, sampleRate);
@@ -224,7 +225,7 @@ public class Setting {
 			//
 		}
 
-		if (back_mdxRootPath != mdxRootPath) rebootLevel |= 2;
+		if (back_mdxRootUriStr != ActivitySelectMdxFile.getStringFromUri(mdxRootUri)) rebootLevel |= 2;
 		if (back_verbose != verbose) rebootLevel |= 2;
 		if (back_rotateMode != rotateMode) rebootLevel |= 1;
 
@@ -255,7 +256,7 @@ public class Setting {
 
 		spe_putInt(spe, "pref_sys_"+name_rotateMode, rotateMode);
 
-		spe_putString(spe, "pref_"+name_mdxRootPath, mdxRootPath);
+		spe_putString(spe, "pref_"+name_mdxRootUri, ActivitySelectMdxFile.getStringFromUri(mdxRootUri));
 		spe_putBoolean(spe, "pref_"+name_analogFilter, analogFilter);
 		spe_putInt(spe, "pref_"+name_sampleRate, sampleRate);
 		spe_putInt(spe, "pref_"+name_bufferSize, bufferSize);
@@ -288,7 +289,7 @@ public class Setting {
 
 		spe.remove("pref_sys_"+name_rotateMode);
 
-		spe.remove("pref_"+name_mdxRootPath);
+		spe.remove("pref_"+name_mdxRootUri);
 		spe.remove("pref_"+name_analogFilter);
 		spe.remove("pref_"+name_sampleRate);
 		spe.remove("pref_"+name_bufferSize);

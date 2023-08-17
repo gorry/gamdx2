@@ -496,7 +496,7 @@ public class Layout {
 	 * 曲情報の更新
 	 */
 	public void musicInfoLayout_UpdateTimer() {
-		if (T) Log.v(TAG, M()+"@in");
+		// if (T) Log.v(TAG, M()+"@in");
 
 		if (ActivityMain.iMusicPlayerService == null) {
 			return;
@@ -519,7 +519,7 @@ public class Layout {
 			mPlayTimeText.setText(s);
 		}
 
-		if (T) Log.v(TAG, M()+"@out");
+		// if (T) Log.v(TAG, M()+"@out");
 	}
 }
 

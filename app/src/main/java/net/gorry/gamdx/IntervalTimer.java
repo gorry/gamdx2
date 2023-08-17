@@ -18,7 +18,7 @@ import android.util.Log;
 public class IntervalTimer {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "IntervalTimer";
-	private static final boolean T = true; //false;
+	private static final boolean T = false;
 	private static final boolean V = false;
 	private static final boolean D = false;
 	private static final boolean I = !RELEASE;

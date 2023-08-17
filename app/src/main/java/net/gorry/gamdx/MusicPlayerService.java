@@ -12,12 +12,16 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author gorry
@@ -26,7 +30,7 @@ import androidx.core.app.NotificationCompat;
 public class MusicPlayerService extends ForegroundService {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "MusicPlayerService";
-	private static final boolean T = true; //false;
+	private static final boolean T = false;
 	private static final boolean V = false;
 	private static final boolean D = false;
 	private static final boolean I = !RELEASE;
@@ -341,9 +345,6 @@ public class MusicPlayerService extends ForegroundService {
 
 	/**
 	 * 通知表示の消去
-	 * @param ticker ティッカー
-	 * @param title タイトル
-	 * @param message メッセージ
 	 * @param id ID
 	 */
 	private void clearNotification(final int id) {
@@ -418,12 +419,14 @@ public class MusicPlayerService extends ForegroundService {
 			return 0;
 		}
 
+/*
 		@Override
 		public int setPlayListAsFolder(final String path) throws RemoteException {
 			if (T) Log.v(TAG, M()+"@in: path="+path);
 			if (T) Log.v(TAG, M()+"@out");
 			return 0;
 		}
+*/
 
 		@Override
 		public String[] getPlayList() throws RemoteException {
@@ -575,12 +578,12 @@ public class MusicPlayerService extends ForegroundService {
 		}
 
 		@Override
-		public int playMusicFile(final String path) throws RemoteException {
-			if (T) Log.v(TAG, M()+"@in: path="+path);
+		public int playMusicFile(final String uristr) throws RemoteException {
+			if (T) Log.v(TAG, M()+"@in: uristr="+uristr);
 
 			int ret = 0;
-			final String playList[] = new String[1];
-			playList[0] = path;
+			String[] playList = new String[1];
+			playList[0] = uristr;
 			if (player.setPlayList(playList)) {
 				if (player.setPlayNumber(0)) {
 					player.setPlay(true);
@@ -616,7 +619,8 @@ public class MusicPlayerService extends ForegroundService {
 		public void setLastSelectedFileName(final String filename) throws RemoteException {
 			if (T) Log.v(TAG, M()+"@in: filename="+filename);
 
-			player.setLastSelectedFileName(filename);
+			Uri uri = ActivitySelectMdxFile.getUriFromString(filename);
+			player.setLastSelectedFileUri(uri);
 
 			if (T) Log.v(TAG, M()+"@out");
 		}
@@ -625,10 +629,11 @@ public class MusicPlayerService extends ForegroundService {
 		public String getLastSelectedFileName() throws RemoteException {
 			if (T) Log.v(TAG, M()+"@in");
 
-			String ret = player.getLastSelectedFileName();
+			Uri uri = player.getLastSelectedFileUri();
+			String uristr = ActivitySelectMdxFile.getStringFromUri(uri);
 
-			if (T) Log.v(TAG, M()+"@out: ret="+ret);
-			return ret;
+			if (T) Log.v(TAG, M()+"@out: uristr="+uristr);
+			return uristr;
 		}
 
 		@Override
