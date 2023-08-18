@@ -76,7 +76,7 @@ JNIAPI(jint, mxdrvgGetPCM)(
 	jint len
 );
 
-JNIAPI(void, mxdrvgSetData)(
+JNIAPI(jint, mxdrvgSetData)(
 	JNIEnv *env,
 	jclass cls, 
 	jbyteArray mdx,

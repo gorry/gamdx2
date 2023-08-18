@@ -239,7 +239,7 @@ JNIAPI(jint, mxdrvgGetPCM)(
 	return Terminated;
 }
 
-JNIAPI(void, mxdrvgSetData)(
+JNIAPI(jint, mxdrvgSetData)(
 	JNIEnv *env,
 	jclass cls, 
 	jbyteArray mdx,
@@ -249,7 +249,7 @@ JNIAPI(void, mxdrvgSetData)(
 ) {
 	LOGI("start: env=%p", env);
 	if ((mdx == NULL) || (mdxsize == 0)) {
-		return;
+		return -1;
 	}
 	jbyte *jmdx = env->GetByteArrayElements(mdx, 0);
 	jbyte *jpdx = NULL;
@@ -272,12 +272,14 @@ JNIAPI(void, mxdrvgSetData)(
 		}
 	}
 #endif
-	MXDRV_SetData2(&g_MxdrvContext, jmdx, mdxsize, jpdx, pdxsize);
+	int ret = MXDRV_SetData2(&g_MxdrvContext, jmdx, mdxsize, jpdx, pdxsize);
 	if (jpdx) {
 		env->ReleaseByteArrayElements(pdx, jpdx, 0);
 	}
 	env->ReleaseByteArrayElements(mdx, jmdx, 0);
 	Terminated = 0;
+
+	return ret;
 }
 
 JNIAPI(jint, mxdrvgMeasurePlayTime)(
@@ -488,11 +490,11 @@ void jniwrap_MXDRVG_OPMINTFUNC(
 
 	if (!Terminated) {
 		if (G->L001e13 != 0) {
-			 LOGD("Terminated by L001e13");
+			LOGD("Terminated by L001e13, env=%p", env);
 			Terminated = 1;
 		}
 		if (G->L002246 == 65535) {
-			 LOGD("Terminated by L002246");
+			LOGD("Terminated by L002246, env=%p", env);
 			Terminated = 1;
 		} else {
 			int loopcount;
@@ -503,7 +505,7 @@ void jniwrap_MXDRVG_OPMINTFUNC(
 						FadeoutStart = 1;
 						MXDRV_Fadeout(&g_MxdrvContext);
 					} else {
-						 LOGD("Terminated by LOOPCOUNT");
+						LOGD("Terminated by LOOPCOUNT, env=%p", env);
 						Terminated = 1;
 					}
 				}
