@@ -44,7 +44,7 @@ public class Natives
 	/** */
 	public static native int mxdrvgGetPCM(short[] buf, int ofs, int len);
 	/** */
-	public static native void mxdrvgSetData(byte[] mdx, int mdxsize, byte[] pdx, int pdxsize);
+	public static native int mxdrvgSetData(byte[] mdx, int mdxsize, byte[] pdx, int pdxsize);
 	/** */
 	public static native int mxdrvgMeasurePlayTime(int loop, int fadeout);
 	/** */
