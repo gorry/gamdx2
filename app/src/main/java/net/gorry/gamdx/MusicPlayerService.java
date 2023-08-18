@@ -4,6 +4,7 @@
 package net.gorry.gamdx;
 
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -12,7 +13,9 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
@@ -62,6 +65,8 @@ public class MusicPlayerService extends ForegroundService {
 	private static final int NOTIFY_SYSTEM = 0;
 	private static final int NOTIFY_LOWMEMORY = 1;
 
+	private static final String CHANNEL_GAMDX="channel_gamdx";
+
 	/**
 	 * コンストラクタ
 	 */
@@ -99,6 +104,27 @@ public class MusicPlayerService extends ForegroundService {
 		if (extras != null) {
 			//
 		}
+
+		if (T) Log.v(TAG, M()+"@out");
+	}
+
+	private void setupNotification() {
+		if (T) Log.v(TAG, M()+"@in");
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			NotificationManager manager = (NotificationManager)getSystemService(Context.NOTIFICATION_SERVICE);
+
+			NotificationChannel channel = new NotificationChannel(
+				CHANNEL_GAMDX,
+				"GAMDX",
+				NotificationManager.IMPORTANCE_DEFAULT
+			);
+			channel.enableLights(false);
+			channel.setLightColor(Color.WHITE);
+			channel.setLockscreenVisibility(Notification.VISIBILITY_PUBLIC);
+			manager.createNotificationChannel(channel);
+		}
+
 		SharedPreferences pref = getApplicationContext().getSharedPreferences("musicplayerservice", 0);
 		final boolean killedByLowMemory = pref.getBoolean("killedbylowmemory", false);
 		if (killedByLowMemory) {
@@ -108,7 +134,7 @@ public class MusicPlayerService extends ForegroundService {
 						showNotification(
 								"Restart", "GAMDX",
 								getString(R.string.musicplayerservice_java_restartmusicplayerservicebylowmemory),
-								R.mipmap.ic_launcher,
+								R.mipmap.ic_notification,
 								Notification.FLAG_ONGOING_EVENT,
 								NOTIFY_SYSTEM
 						)
@@ -126,7 +152,7 @@ public class MusicPlayerService extends ForegroundService {
 						showNotification(
 								"Start", "GAMDX",
 								getString(R.string.musicplayerservice_java_startmusicplayerservice),
-								R.mipmap.ic_launcher,
+								R.mipmap.ic_notification,
 								Notification.FLAG_ONGOING_EVENT,
 								NOTIFY_SYSTEM
 						)
@@ -167,7 +193,7 @@ public class MusicPlayerService extends ForegroundService {
 		showNotification(
 				"End", "GAMDX",
 				getString(R.string.musicplayerservice_java_shutdownmusicplayerservice),
-				R.mipmap.ic_launcher,
+				R.mipmap.ic_notification,
 				Notification.FLAG_ONGOING_EVENT,
 				NOTIFY_SYSTEM
 		);
@@ -218,6 +244,8 @@ public class MusicPlayerService extends ForegroundService {
 		if (!IMusicPlayerService.class.getName().equals(intent.getAction())) {
 			return null;
 		}
+
+		setupNotification();
 
 		if (T) Log.v(TAG, M()+"@out: apIMusicPlayerService="+apIMusicPlayerService);
 		return apIMusicPlayerService;
@@ -333,6 +361,10 @@ public class MusicPlayerService extends ForegroundService {
 
 		if ((flag & Notification.FLAG_ONGOING_EVENT) != 0) {
 			builder.setOngoing(true);
+		}
+
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			builder.setChannelId(CHANNEL_GAMDX);
 		}
 
 		Notification notification = builder.build();

@@ -307,7 +307,7 @@ public class MusicPlayer {
 		}
 
 		if (T) Log.v(TAG, M()+"@out: ret="+ret);
-		return false;
+		return ret;
 	}
 
 	/**

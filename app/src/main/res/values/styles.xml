@@ -2,6 +2,9 @@
 <resources>
 	<style name="AppTheme" parent="Theme.AppCompat.DayNight.DarkActionBar">
 	</style>
+	<style name="SplashTheme" parent="Theme.AppCompat.Light.NoActionBar">
+		<item name="android:windowBackground">@drawable/splash</item>
+	</style>
 	<style name="preference_mynotice">
 		<item name="android:layout">@layout/preference_mynotice</item>
 		<item name="android:enabled">false</item>

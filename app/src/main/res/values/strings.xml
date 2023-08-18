@@ -41,6 +41,8 @@
 	<string name="pref_buffersize_dialogtitle">Sound Buffer Size</string>
 	<string name="msg_open_document_tree_mxdrv_folder">Select the root folder containing the MXDRV data at the next dialog. You can ONLY open MDX/PDX files in selected folder.</string>
 	<string name="title_open_document_tree_mxdrv_folder">Select MXDRV folder</string>
+	<string name="title_request_permission_notification">Request Permission</string>
+	<string name="msg_request_permission_notification">This app requires [Notification] permission.</string>
 
 
 

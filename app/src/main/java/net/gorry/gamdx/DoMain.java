@@ -197,7 +197,7 @@ public class DoMain {
 
 
 	/**
-	 * 次の曲
+	 * 前の曲
 	 */
 	public void doPrevMusic() {
 		if (T) Log.v(TAG, M()+"@in");
