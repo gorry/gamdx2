@@ -93,7 +93,7 @@ public class DoMain {
 		final AlertDialog.Builder bldr = new AlertDialog.Builder(me);
 		bldr.setTitle(me.getString(R.string.app_title));
 		bldr.setMessage("Version " + versionName + "\n" + me.getString(R.string.copyright))
-		.setIcon(R.drawable.icon);
+		.setIcon(R.mipmap.ic_launcher);
 		bldr.create().show();
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -122,6 +122,7 @@ public class DoMain {
 
 		final Uri uri = ActivitySelectMdxFile.getUriFromString(uristr);
 		intent.setData(uri);
+		intent.putExtra("rootUri", ActivitySelectMdxFile.getStringFromUri(Setting.mdxRootUri));
 		me.startActivityForResult(intent, ActivityMain.ACTIVITY_SELECT_MDX);
 
 		if (T) Log.v(TAG, M()+"@out");

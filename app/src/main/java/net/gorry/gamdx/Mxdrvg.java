@@ -581,15 +581,17 @@ public class Mxdrvg implements Natives.EventListener {
 			}
 
 			boolean havePdx = true;
-			if ((pdxName != null) && (pdxName.length() > 0)) {
-				// MDXフォルダ内のPDXファイルを探す
-				pdxFile = findPdxFile(pdxName, mdxdir);
-				if (pdxFile == null) {
-					if (mPdxFolderUri != null) {
-						// PDXフォルダ内のPDXファイルを探す
-						DocumentFile pdxdir = DocumentFile.fromTreeUri(mContext, mPdxFolderUri);
-						if (pdxdir != null) {
-							pdxFile = findPdxFile(pdxName, pdxdir);
+			if (!infoonly) {
+				if ((pdxName != null) && (pdxName.length() > 0)) {
+					// MDXフォルダ内のPDXファイルを探す
+					pdxFile = findPdxFile(pdxName, mdxdir);
+					if (pdxFile == null) {
+						if (mPdxFolderUri != null) {
+							// PDXフォルダ内のPDXファイルを探す
+							DocumentFile pdxdir = DocumentFile.fromTreeUri(mContext, mPdxFolderUri);
+							if (pdxdir != null) {
+								pdxFile = findPdxFile(pdxName, pdxdir);
+							}
 						}
 					}
 				}

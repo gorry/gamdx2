@@ -7,6 +7,7 @@ import java.text.DecimalFormat;
 
 import android.content.pm.ActivityInfo;
 import android.content.res.Configuration;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
@@ -472,6 +473,8 @@ public class Layout {
 			String s = "";
 			try {
 				s = sv.getCurrentFileName(0);
+				Uri uri = ActivitySelectMdxFile.getUriFromString(s);
+				s = ActivitySelectMdxFile.getDisplayPath(uri, Setting.mdxRootUri);
 			} catch (final RemoteException e) {
 				e.printStackTrace();
 			}
@@ -482,6 +485,8 @@ public class Layout {
 			String s = "";
 			try {
 				s = sv.getCurrentFileName(1);
+				Uri uri = ActivitySelectMdxFile.getUriFromString(s);
+				s = ActivitySelectMdxFile.getDisplayPath(uri, Setting.mdxRootUri);
 			} catch (final RemoteException e) {
 				e.printStackTrace();
 			}

@@ -108,7 +108,7 @@ public class MusicPlayerService extends ForegroundService {
 						showNotification(
 								"Restart", "GAMDX",
 								getString(R.string.musicplayerservice_java_restartmusicplayerservicebylowmemory),
-								R.drawable.icon,
+								R.mipmap.ic_launcher,
 								Notification.FLAG_ONGOING_EVENT,
 								NOTIFY_SYSTEM
 						)
@@ -126,7 +126,7 @@ public class MusicPlayerService extends ForegroundService {
 						showNotification(
 								"Start", "GAMDX",
 								getString(R.string.musicplayerservice_java_startmusicplayerservice),
-								R.drawable.icon,
+								R.mipmap.ic_launcher,
 								Notification.FLAG_ONGOING_EVENT,
 								NOTIFY_SYSTEM
 						)
@@ -167,7 +167,7 @@ public class MusicPlayerService extends ForegroundService {
 		showNotification(
 				"End", "GAMDX",
 				getString(R.string.musicplayerservice_java_shutdownmusicplayerservice),
-				R.drawable.icon,
+				R.mipmap.ic_launcher,
 				Notification.FLAG_ONGOING_EVENT,
 				NOTIFY_SYSTEM
 		);

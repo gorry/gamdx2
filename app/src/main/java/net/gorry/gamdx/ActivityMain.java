@@ -3,6 +3,7 @@ package net.gorry.gamdx;
 import java.io.File;
 import java.util.ArrayList;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
@@ -29,7 +30,9 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.Window;
 
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.documentfile.provider.DocumentFile;
 
 /**
@@ -39,7 +42,7 @@ import androidx.documentfile.provider.DocumentFile;
  * @author gorry
  *
  */
-public class ActivityMain extends Activity {
+public class ActivityMain extends AppCompatActivity {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "ActivityMain";
 	private static final boolean T = true; //false;
@@ -83,6 +86,7 @@ public class ActivityMain extends Activity {
 	/* アプリの一時退避
 	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
 	 */
+	/*
 	@Override
 	protected void onSaveInstanceState(final Bundle outState) {
 		if (T) Log.v(TAG, M()+"@in: outState="+outState);
@@ -91,11 +95,13 @@ public class ActivityMain extends Activity {
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
+	*/
 
 	/*
 	 * アプリの一時退避復元
 	 * @see android.app.Activity#onRestoreInstanceState(android.os.Bundle)
 	 */
+	/*
 	@Override
 	protected void onRestoreInstanceState(final Bundle savedInstanceState) {
 		if (T) Log.v(TAG, M()+"@in: savedInstanceState="+savedInstanceState);
@@ -104,6 +110,7 @@ public class ActivityMain extends Activity {
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
+	*/
 
 	private Uri getMdxRootUri() {
 		if (T) Log.v(TAG, M()+"@in");
@@ -151,6 +158,7 @@ public class ActivityMain extends Activity {
 
 		super.onCreate(savedInstanceState);
 		me = this;
+		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 		setTitle(R.string.activitymain_title);
 
 		iMusicPlayerService = null;
@@ -165,6 +173,11 @@ public class ActivityMain extends Activity {
 		layout.baseLayout_Create(true);
 
 		setContentView(layout.mBaseLayout);
+
+		ActionBar actionBar = getActionBar();
+		if (actionBar != null) {
+			actionBar.show();
+		}
 
 		final Intent intent = getIntent();
 		if (intent != null) {
@@ -773,6 +786,7 @@ public class ActivityMain extends Activity {
 									intent2.setData(uri);
 									intent2.putExtra("listOnly", true);
 									intent2.putExtra("selectedFileName", name);
+									intent2.putExtra("rootUri", ActivitySelectMdxFile.getStringFromUri(Setting.mdxRootUri));
 									startActivityForResult(intent2, ActivityMain.ACTIVITY_SELECT_MDX);
 								}
 							}

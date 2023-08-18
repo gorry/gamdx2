@@ -8,12 +8,12 @@
 	<string name="activitymain_xml_version">Version</string>
 	<string name="activitymain_xml_setting_condense">Preference</string>
 	<string name="activitymain_xml_setting">Preference</string>
-	<string name="hello">Hello GAMDX!</string>
-	<string name="app_name">gamdx2</string>
+	<string name="hello">Hello GAMDX2!</string>
+	<string name="app_name">GAMDX2</string>
 	<string name="app_title">GAMDX2: Android MXDRV Player</string>
 	<string name="copyright">Copyright (C)2000-2023 GORRY.\n\nBased on:\nX68k MXDRV music driver version 2.06+17 Rel.X5-S\n(c)1988-92 milk.,K.MAEKAWA, Missy.M, Yatsube</string>
-	<string name="activitymain_title">GAMDX - Android MXDRV Player</string>
-	<string name="activitysetting_title">GAMDX Setting</string>
+	<string name="activitymain_title">GAMDX2 - Android MXDRV Player</string>
+	<string name="activitysetting_title">GAMDX2 Setting</string>
 	<string name="musicplayerservice_java_shutdownmusicplayerservice">Terminate MXDRVG Service.</string>
 	<string name="musicplayerservice_java_restartmusicplayerservicebylowmemory">MXDRVG Service was Purged and Rebooted by "Low Memory".</string>
 	<string name="musicplayerservice_java_startmusicplayerservice">Start MXDRVG Service.</string>

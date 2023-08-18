@@ -55,15 +55,43 @@ public class ActivitySelectMdxFile extends ListActivity {
 	private Uri mCurrentFileUri;
 	private Uri mLastDirUri;
 	private Thread mThreadGetInfoTask = null;
+	private boolean mHasParentFolder = false;
 
 	@SuppressWarnings("unused")
 	private boolean mSelected = false;
 	@SuppressWarnings("unused")
 	private int mCurPos = 0;
 
+	private Uri mRootUri;
+
 	private Context me;
 
-	private static Uri mRootFolderUri;
+	public static String getDisplayPath(Uri uri, Uri rootUri) {
+		if (T) Log.v(TAG, M()+"@in: uri="+uri+", rootUri="+rootUri);
+
+		if (uri == null) {
+			if (D) Log.v(TAG, M()+"uri is null");
+			if (T) Log.v(TAG, M()+"@out: uristr=");
+			return "";
+		}
+		if (rootUri == null) {
+			if (D) Log.v(TAG, M()+"rootUri is null");
+			if (T) Log.v(TAG, M()+"@out: uristr=");
+			return "";
+		}
+		String uristr = getStringFromUri(uri);
+		String uristrRoot = getStringFromUri(rootUri);
+		if (!uristr.startsWith(uristrRoot)) {
+			if (D) Log.v(TAG, M()+"not in RootFolder");
+			if (T) Log.v(TAG, M()+"@out: uristr=");
+			return "";
+		}
+		uristr = uristr.substring(uristrRoot.length());
+		uristr = uristr.replaceAll("%2F", "/");
+
+		if (T) Log.v(TAG, M()+"@out: uristr="+uristr);
+		return uristr;
+	}
 
 	public static String getStringFromUri(Uri uri) {
 		if (T) Log.v(TAG, M()+"@in: uri="+uri);
@@ -186,18 +214,17 @@ public class ActivitySelectMdxFile extends ListActivity {
 		}
 
 		// とりあえず一覧をとる
-		mCurrentDirUri = uri;
 		mDirEntry.clear();
 		mDirs.clear();
 		mFiles.clear();
 		List<DocumentFile> filesall = Arrays.asList(mCurrentDir.listFiles());
 
 		// 親フォルダが自分と同じ（＝ルート）でなければ".."を最初にmDirEntryに追加する
-		boolean hasParentFolder = false;
+		mHasParentFolder = false;
 		DocumentFile parent = getParentFolder(me, mCurrentDir);
 		if (!parent.getUri().equals(mCurrentDir.getUri())) {
 			mDirEntry.add(parent);
-			hasParentFolder = true;
+			mHasParentFolder = true;
 		}
 
 		Comparator comparator = new Comparator<DocumentFile>() {
@@ -208,7 +235,6 @@ public class ActivitySelectMdxFile extends ListActivity {
 		};
 
 		// フォルダをmDirEntryに追加する
-		mDirs.clear();
 		for (int i=0; i<filesall.size(); i++) {
 			DocumentFile f = filesall.get(i);
 			if (f.isDirectory()) {
@@ -257,7 +283,7 @@ public class ActivitySelectMdxFile extends ListActivity {
 		}
 
 		// リストビューを作成する
-		mAdapter = new SelectMdxFileAdapter(this, mDirEntry, mCurPos, hasParentFolder);
+		mAdapter = new SelectMdxFileAdapter(this, mDirEntry, mCurPos, mHasParentFolder);
 		setListAdapter(mAdapter);
 		getListView().setSelection(mCurPos);
 
@@ -318,6 +344,14 @@ public class ActivitySelectMdxFile extends ListActivity {
 		final Intent intent = getIntent();
 		uri = intent.getData();
 
+		final Bundle extras = intent.getExtras();
+		if (extras != null) {
+			String uristrRoot = extras.getString("rootUri");
+			if (uristrRoot != null) {
+				mRootUri = getUriFromString(uristrRoot);
+			}
+		}
+
 		// URIを決定してファイル一覧を得る
 		if (mCurrentFileUri != null) {
 			uri = mCurrentFileUri;
@@ -325,13 +359,12 @@ public class ActivitySelectMdxFile extends ListActivity {
 		if (mCurrentDirUri != null) {
 			uri = mCurrentDirUri;
 		}
-		if (uri != null) {
-			uri = Setting.mdxRootUri;
+		if (uri == null) {
+			uri = mRootUri;
 		}
 		setFileList(uri);
 
 		// "listOnly"がONなら、そのファイルを選択したことにして終了する
-		final Bundle extras = intent.getExtras();
 		if (extras != null) {
 			if (extras.getBoolean("listOnly")) {
 				final Intent intent2 = new Intent();
@@ -351,7 +384,7 @@ public class ActivitySelectMdxFile extends ListActivity {
 			}
 		}
 
-		mySetTitle(uri);
+		mySetTitle(mCurrentDirUri);
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -427,7 +460,11 @@ public class ActivitySelectMdxFile extends ListActivity {
 			mLastDirUri = null;
 			mSelected = true;
 			final Intent intent = new Intent();
-			makeIntentReturnFiles(intent, mFiles, pos-mDirs.size());
+			int selpos = pos - mDirs.size();
+			if (mHasParentFolder) {
+				selpos--;
+			}
+			makeIntentReturnFiles(intent, mFiles, selpos);
 			setResult(RESULT_OK, intent);
 			finish();
 		}
@@ -462,15 +499,8 @@ public class ActivitySelectMdxFile extends ListActivity {
 	public void mySetTitle(final Uri uri) {
 		if (T) Log.v(TAG, M()+"@in: uri="+uri);
 
-		final String path = getStringFromUri(uri);
-		final int idx = path.lastIndexOf('/');
-		final String folder;
-		if (idx >= 0) {
-			folder = path.substring(0, idx+1);
-		} else {
-			folder = "/";
-		}
-		setTitle(folder + " " + getString(R.string.activityselectmdxfile_java_title));
+		final String path = getDisplayPath(uri, mRootUri);
+		setTitle(path + " " + getString(R.string.activityselectmdxfile_java_title));
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
