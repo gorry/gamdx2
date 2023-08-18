@@ -30,7 +30,7 @@ import java.util.List;
 public class MusicPlayerService extends ForegroundService {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "MusicPlayerService";
-	private static final boolean T = false;
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
 	private static final boolean D = false;
 	private static final boolean I = !RELEASE;
@@ -284,13 +284,13 @@ public class MusicPlayerService extends ForegroundService {
 
 		@Override
 		public void timerEvent(final int playAt) {
-			if (T) Log.v(TAG, M()+"@in");
+			// if (T) Log.v(TAG, M()+"@in");
 
 			final Intent intent = new Intent(ACTION);
 			intent.putExtra("msg", MusicPlayerService.TIMER_IRQ);
 			sendBroadcast(intent);
 
-			if (T) Log.v(TAG, M()+"@out");
+			// if (T) Log.v(TAG, M()+"@out");
 		}
 
 		@Override
@@ -509,11 +509,11 @@ public class MusicPlayerService extends ForegroundService {
 
 		@Override
 		public int getPlayAt() throws RemoteException {
-			if (T) Log.v(TAG, M()+"@in");
+			// if (T) Log.v(TAG, M()+"@in");
 
 			int ret = player.getPlayAt();
 
-			if (T) Log.v(TAG, M()+"@out: ret="+ret);
+			// if (T) Log.v(TAG, M()+"@out: ret="+ret);
 			return ret;
 		}
 

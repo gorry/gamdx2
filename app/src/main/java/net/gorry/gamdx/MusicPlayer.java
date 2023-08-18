@@ -33,7 +33,7 @@ public class MusicPlayer {
 
 	private Context me;
 
-	private MusicPlayerEventListener[] mListeners = new MusicPlayerEventListener[0];
+	private ArrayList<MusicPlayerEventListener> mListeners = new ArrayList<MusicPlayerEventListener>();
 
 	private Uri mLastSelectedFileUri = null;
 	private Uri[] mPlayList = new Uri[0];
@@ -53,6 +53,12 @@ public class MusicPlayer {
 		me = context;
 		DocumentFile mdxRootDir = DocumentFile.fromTreeUri(me, Setting.mdxRootUri);
 		DocumentFile pdxDir = mdxRootDir.findFile("pdx");
+		if (pdxDir == null) {
+			pdxDir = mdxRootDir.findFile("PDX");
+			if (pdxDir == null) {
+				pdxDir = mdxRootDir;
+			}
+		}
 		mMxdrvg = new Mxdrvg(Setting.sampleRate, (Setting.analogFilter ? 3 : 1), 1024*1024, 1024*1024*2);
 		mMxdrvg.setContext(me);
 		mMxdrvg.addEventListener(new MxdrvgListener());
@@ -126,8 +132,8 @@ public class MusicPlayer {
 		public synchronized void endPlay() {
 			if (T) Log.v(TAG, M()+"@in");
 
-			for (int i=mListeners.length-1; i>=0; i--) {
-				mListeners[i].endPlay();
+			for (int i=mListeners.size()-1; i>=0; i--) {
+				mListeners.get(i).endPlay();
 			}
 			if (mAutoPlayNextMusic) {
 				if (V) Log.v(TAG, "endPlay(): play next");
@@ -143,8 +149,8 @@ public class MusicPlayer {
 		public synchronized void timerEvent(final int playAt) {
 			// if (T) Log.v(TAG, M()+"@in: playAt="+playAt);
 
-			for (int i=mListeners.length-1; i>=0; i--) {
-				mListeners[i].timerEvent(playAt);
+			for (int i=mListeners.size()-1; i>=0; i--) {
+				mListeners.get(i).timerEvent(playAt);
 			}
 
 			// if (T) Log.v(TAG, M()+"@out");
@@ -161,11 +167,8 @@ public class MusicPlayer {
 		if (l == null) {
 			throw new IllegalArgumentException("Listener is null.");
 		}
-		final int len = mListeners.length;
-		final MusicPlayerEventListener[] oldListeners = mListeners;
-		mListeners = new MusicPlayerEventListener[len + 1];
-		System.arraycopy(oldListeners, 0, mListeners, 0, len);
-		mListeners[len] = l;
+		mListeners.add(l);
+		if (I) Log.i(TAG, M()+"add listener "+l+": size="+mListeners.size());
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -183,30 +186,17 @@ public class MusicPlayer {
 			return false;
 		}
 
-		int index = -1;
-		for (int i=0; i<mListeners.length; i++) {
-			if (mListeners[i].equals(l)) {
-				index = i;
-				break;
+		for (int i=mListeners.size()-1; i>=0; i--) {
+			if (mListeners.get(i).equals(l)) {
+				mListeners.remove(i);
+				if (I) Log.i(TAG, M()+"remove listener "+l+": size="+mListeners.size());
+				if (T) Log.v(TAG, M()+"@out");
+				return true;
 			}
 		}
-		if (index == -1) {
-			Log.e(TAG, M()+"failed: index == -1");
-			return false;
-		}
 
-		mListeners[index] = null;
-		final int len = mListeners.length - 1;
-		final MusicPlayerEventListener[] newListeners = new MusicPlayerEventListener[len];
-		for (int i=0, j=0; i<len; j++) {
-			if (mListeners[j] != null) {
-				newListeners[i++] = mListeners[j];
-			}
-		}
-		mListeners = newListeners;
-
-		if (T) Log.v(TAG, M()+"@out");
-		return true;
+		Log.e(TAG, M()+"failed: not found "+l);
+		return false;
 	}
 
 	/**
@@ -267,8 +257,8 @@ public class MusicPlayer {
 		if (uri != null) {
 			final boolean f = mMxdrvg.loadMdxFile(uri, false);
 			if (f) {
-				for (int i=mListeners.length-1; i>=0; i--) {
-					mListeners[i].acceptMusicFile();
+				for (int i=mListeners.size()-1; i>=0; i--) {
+					mListeners.get(i).acceptMusicFile();
 				}
 				if (T) Log.v(TAG, M()+"@out: true");
 			return true;

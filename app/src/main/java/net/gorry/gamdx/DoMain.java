@@ -136,10 +136,16 @@ public class DoMain {
 
 		if (V) Log.v(TAG, "doPlayMusicButton()");
 		try {
+			ActivityMain.iMusicPlayerService.setPlay(true);
+		} catch (final RemoteException e) {
+			e.printStackTrace();
+		}
+/*
+		try {
 			final boolean p1 = ActivityMain.iMusicPlayerService.getPlay();
-			final boolean p2 = ActivityMain.iMusicPlayerService.getPause();
-			if (p1 && p2) {
-				ActivityMain.iMusicPlayerService.setPause(false);
+			if (p1) {
+				final boolean p2 = ActivityMain.iMusicPlayerService.getPause();
+				ActivityMain.iMusicPlayerService.setPause(!p2);
 			} else {
 				ActivityMain.iMusicPlayerService.setPause(false);
 				ActivityMain.iMusicPlayerService.setPlay(true);
@@ -147,6 +153,7 @@ public class DoMain {
 		} catch (final RemoteException e) {
 			e.printStackTrace();
 		}
+*/
 
 		if (T) Log.v(TAG, M()+"@out");
 	}

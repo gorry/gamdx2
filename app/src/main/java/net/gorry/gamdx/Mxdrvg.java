@@ -9,6 +9,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
 import java.util.Arrays;
 
 import net.gorry.ndk.LibraryLoader;
@@ -33,7 +34,7 @@ import androidx.documentfile.provider.DocumentFile;
 public class Mxdrvg implements Natives.EventListener {
 	private static final boolean RELEASE = false;//true;
 	private static final String TAG = "Mxdrvg";
-	private static final boolean T = false;
+	private static final boolean T = true; //false;
 	private static final boolean V = false;
 	private static final boolean D = false;
 	private static final boolean I = !RELEASE;
@@ -44,7 +45,7 @@ public class Mxdrvg implements Natives.EventListener {
 		return es[count].getFileName()+"("+es[count].getLineNumber()+"): "+es[count].getMethodName()+"(): ";
 	}
 
-	private MxdrvgEventListener[] mListeners = new MxdrvgEventListener[0];
+	private ArrayList<MxdrvgEventListener> mListeners = new ArrayList<MxdrvgEventListener>();
 
 	private Uri mMdxFileUri;
 	private Uri mPdxFileUri;
@@ -125,11 +126,8 @@ public class Mxdrvg implements Natives.EventListener {
 		if (l == null) {
 			throw new IllegalArgumentException("Listener is null.");
 		}
-		final int len = mListeners.length;
-		final MxdrvgEventListener[] oldListeners = mListeners;
-		mListeners = new MxdrvgEventListener[len + 1];
-		System.arraycopy(oldListeners, 0, mListeners, 0, len);
-		mListeners[len] = l;
+		mListeners.add(l);
+		if (I) Log.i(TAG, M()+"add listener "+l+": size="+mListeners.size());
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -146,29 +144,18 @@ public class Mxdrvg implements Natives.EventListener {
 			Log.e(TAG, M()+"failed: l == null");
 			return false;
 		}
-		int index = -1;
-		for (int i=0; i<mListeners.length; i++) {
-			if (mListeners[i].equals(l)) {
-				index = i;
-				break;
-			}
-		}
-		if (index == -1) {
-			Log.e(TAG, M()+"failed: index == -1");
-			return false;
-		}
-		mListeners[index] = null;
-		final int len = mListeners.length - 1;
-		final MxdrvgEventListener[] newListeners = new MxdrvgEventListener[len];
-		for (int i=0, j=0; i<len; j++) {
-			if (mListeners[j] != null) {
-				newListeners[i++] = mListeners[j];
-			}
-		}
-		mListeners = newListeners;
 
-		if (T) Log.v(TAG, M()+"@out");
-		return true;
+		for (int i=mListeners.size()-1; i>=0; i--) {
+			if (mListeners.get(i).equals(l)) {
+				mListeners.remove(i);
+				if (I) Log.i(TAG, M()+"remove listener "+l+": size="+mListeners.size());
+				if (T) Log.v(TAG, M()+"@out");
+				return true;
+			}
+		}
+
+		Log.e(TAG, M()+"failed: not found "+l);
+		return false;
 	}
 
 	/**
@@ -395,7 +382,7 @@ public class Mxdrvg implements Natives.EventListener {
 
 			@Override
 			public void onTimer(final long timerCount) {
-				if (T) Log.v(TAG, M()+"@in: timerCount="+timerCount);
+				// if (T) Log.v(TAG, M()+"@in: timerCount="+timerCount);
 
 				/*
 				// こちらだと曲終了後のウェイトが反映されないのでナシ
@@ -411,19 +398,19 @@ public class Mxdrvg implements Natives.EventListener {
 				if (playAt < mDuration) {
 					if (lastPlayAt/1000 != playAt/1000) {
 						lastPlayAt = playAt;
-						for (int i=mListeners.length-1; i>=0; i--) {
-							mListeners[i].timerEvent(playAt);
+						for (int i=mListeners.size()-1; i>=0; i--) {
+							mListeners.get(i).timerEvent(playAt);
 						}
 					}
 				} else {
 					setPlay(false);
 					mTimer.stopTimer();
-					for (int i=mListeners.length-1; i>=0; i--) {
-						mListeners[i].endPlay();
+					for (int i=mListeners.size()-1; i>=0; i--) {
+						mListeners.get(i).endPlay();
 					}
 				}
 
-				if (T) Log.v(TAG, M()+"@out");
+				// if (T) Log.v(TAG, M()+"@out");
 			}
 		};
 	}
@@ -674,10 +661,15 @@ public class Mxdrvg implements Natives.EventListener {
 			mMusicTerminatedMxdrvg = false;
 
 			setTotalVolume(mMasterVolume);
+			int ret = 0;
 			if (havePdx && (pdxData != null) && (pdxDataSize > 0)) {
-				Natives.mxdrvgSetData(mdxData, mdxDataSize, pdxData, pdxDataSize);
+				ret = Natives.mxdrvgSetData(mdxData, mdxDataSize, pdxData, pdxDataSize);
 			} else {
-				Natives.mxdrvgSetData(mdxData, mdxDataSize, null, 0);
+				ret = Natives.mxdrvgSetData(mdxData, mdxDataSize, null, 0);
+			}
+			if (ret != 0) {
+				Log.e(TAG, M()+"failed: memory error");
+				return false;
 			}
 			mdxData = null;
 			pdxData = null;
@@ -788,7 +780,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 */
 	public boolean getPlay() {
 		if (T) Log.v(TAG, M()+"@out: ret="+mStopMxdrvg);
-		return mStopMxdrvg;
+		return !mStopMxdrvg;
 	}
 
 	/**
@@ -814,7 +806,7 @@ public class Mxdrvg implements Natives.EventListener {
 	 */
 	public int getPlayAt() {
 		int ret = Natives.mxdrvgGetPlayAt();
-		if (T) Log.v(TAG, M()+"@out: ret="+ret);
+		// if (T) Log.v(TAG, M()+"@out: ret="+ret);
 		return ret;
 	}
 
