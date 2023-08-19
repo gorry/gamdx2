@@ -1,44 +1,20 @@
 package net.gorry.gamdx;
 
-import java.io.File;
-import java.util.ArrayList;
-
-import android.app.ActionBar;
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.res.Configuration;
 import android.Manifest.permission;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.provider.DocumentsContract;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
-import android.view.Window;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
-import androidx.documentfile.provider.DocumentFile;
 
 /**
  * 
@@ -48,12 +24,12 @@ import androidx.documentfile.provider.DocumentFile;
  *
  */
 public class ActivityRequestPermission extends AppCompatActivity {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "ActivityMain";
-	private static final boolean T = true; //false;
-	private static final boolean V = true; //false;
-	private static final boolean D = true; //false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();

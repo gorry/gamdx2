@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen
   xmlns:android="http://schemas.android.com/apk/res/android">
+<!--
 	<Preference
 		android:title="@string/pref_reboot_title"
 		style="@style/preference_mynotice"
 		/>
-	<EditTextPreference android:key="pref_mdxrooturi"
+-->
+	<PreferenceScreen android:key="pref_mdxrooturi"
 		android:title="@string/pref_mdxrooturi_title"
 		android:summary="@string/pref_mdxrooturi_summary"
-		android:dialogTitle="@string/pref_mdxrooturi_dialogtitle"
-		android:singleLine="true"
 		/>
 	<CheckBoxPreference android:key="pref_analogfilter"
 		android:title="@string/pref_analogfilter_title"

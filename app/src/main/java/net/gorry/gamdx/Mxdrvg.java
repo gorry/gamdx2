@@ -3,8 +3,6 @@
  */
 package net.gorry.gamdx;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,7 +19,6 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Process;
 import android.util.Log;
 
@@ -32,12 +29,12 @@ import androidx.documentfile.provider.DocumentFile;
  *
  */
 public class Mxdrvg implements Natives.EventListener {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "Mxdrvg";
-	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -110,6 +107,18 @@ public class Mxdrvg implements Natives.EventListener {
 	 */
 	public void dispose() {
 		if (T) Log.v(TAG, M()+"@in");
+
+		if (mTimer != null) {
+			detachMonitorTimer();
+		}
+		if (mAudioTrack != null) {
+			detachAudioTrack();
+		}
+
+		for (int i=mListeners.size()-1; i>=0; i--) {
+			mListeners.remove(i);
+		}
+		mListeners.clear();
 
 		Natives.mxdrvgEnd();
 
@@ -307,7 +316,7 @@ public class Mxdrvg implements Natives.EventListener {
 	public void fillAudioTrack() {
 		// if (T) Log.v(TAG, M()+"@in");
 
-		if (V) Log.v(TAG, M()+"mAudioBufferOfs="+mAudioBufferOfs+", mAudioBufferDeltaSize="+mAudioBufferDeltaSize);
+		// if (V) Log.v(TAG, M()+"mAudioBufferOfs="+mAudioBufferOfs+", mAudioBufferDeltaSize="+mAudioBufferDeltaSize);
 		while (mAudioBufferOfs < mAudioBufferDeltaSize) {
 			int delta = mAudioBufferDeltaSize - mAudioBufferOfs;
 			if (delta > mMxdrvgWaveDeltaSize) {
@@ -402,7 +411,7 @@ public class Mxdrvg implements Natives.EventListener {
 							mListeners.get(i).timerEvent(playAt);
 						}
 					}
-				} else {
+				} else if (playAt > 0) {
 					setPlay(false);
 					mTimer.stopTimer();
 					for (int i=mListeners.size()-1; i>=0; i--) {

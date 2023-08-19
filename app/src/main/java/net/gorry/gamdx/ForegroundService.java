@@ -17,12 +17,12 @@ import android.util.Log;
  */
 
 public abstract class ForegroundService extends Service {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "ForegroundService";
-	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();

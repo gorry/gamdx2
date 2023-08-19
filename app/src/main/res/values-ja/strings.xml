@@ -43,6 +43,7 @@
 	<string name="title_open_document_tree_mxdrv_folder">Select MXDRV folder</string>
 	<string name="title_request_permission_notification">権限の要求</string>
 	<string name="msg_request_permission_notification">このアプリは「通知」の権限が必要です。</string>
+	<string name="activitymain_java_progress_rebootservice">MXDRVGサービスを再起動しています…</string>
 
 
 

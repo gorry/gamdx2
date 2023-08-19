@@ -12,8 +12,8 @@ android {
         applicationId "net.gorry.gamdx2"
         minSdk 22
         targetSdk 33
-        versionCode 202308181
-        versionName "2023.0818.1"
+        versionCode 202308201
+        versionName "2023.0820.1"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             ndkBuild {

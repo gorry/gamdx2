@@ -1,42 +1,22 @@
 package net.gorry.gamdx;
 
-import java.io.File;
-import java.util.ArrayList;
-
 import android.app.ActionBar;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.content.res.Configuration;
-import android.Manifest.permission;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
-import android.os.IBinder;
-import android.os.RemoteException;
-import android.provider.DocumentsContract;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.Window;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.content.ContextCompat;
 import androidx.documentfile.provider.DocumentFile;
 
 /**
@@ -47,12 +27,12 @@ import androidx.documentfile.provider.DocumentFile;
  *
  */
 public class ActivityMain extends AppCompatActivity {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "ActivityMain";
-	private static final boolean T = true; //false;
-	private static final boolean V = true; //false;
-	private static final boolean D = true; //false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -68,10 +48,7 @@ public class ActivityMain extends AppCompatActivity {
 	public static final int ACTION_OPEN_DOCUMENT_TREE = 3;
 
 	/** */
-	private static Activity me;
-
-	/** */
-	private Intent mStartIntent = null;
+	private static ActivityMain me;
 
 	/** */
 	public static Layout layout;
@@ -79,12 +56,7 @@ public class ActivityMain extends AppCompatActivity {
 	public static DoMain doMain;
 
 	/** */
-	public static IMusicPlayerService iMusicPlayerService;
-
-	/** */
 	public static boolean mShutdownServiceOnDestroy = false;
-
-	private final MusicPlayerServiceReceiver mReceiver = new MusicPlayerServiceReceiver();
 
 
 	/* アプリの一時退避
@@ -116,6 +88,16 @@ public class ActivityMain extends AppCompatActivity {
 	}
 	*/
 
+	public static ActivityMain Instance() {
+		return me;
+	}
+
+	public static IMusicPlayerService getMusicPlayerService() {
+		// if (T) Log.v(TAG, M()+"@in");
+		// if (T) Log.v(TAG, M()+"@out");
+		return doMain.iMusicPlayerService;
+	}
+
 	private Uri getMdxRootUri() {
 		if (T) Log.v(TAG, M()+"@in");
 
@@ -126,7 +108,20 @@ public class ActivityMain extends AppCompatActivity {
 		return mdxRootUri;
 	}
 
-	private void dialogSelectMxdrvDocumentTree() {
+
+	public void DialogSelectMxdrvDocumentTree() {
+		if (T) Log.v(TAG, M()+"@in");
+
+		Intent intent2 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
+		// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
+		// mdxRootUri = ActivitySelectMdxFile.getUriFromString("file://"+path);
+		// intent2.putExtra(DocumentsContract.EXTRA_INITIAL_URI, mdxRootUri);
+		startActivityForResult(intent2, ACTION_OPEN_DOCUMENT_TREE);
+
+		if (T) Log.v(TAG, M()+"@out");
+	}
+
+	private void DialogPreSelectMxdrvDocumentTree() {
 		if (T) Log.v(TAG, M()+"@in");
 
 		new AlertDialog.Builder(this)
@@ -138,11 +133,7 @@ public class ActivityMain extends AppCompatActivity {
 				public void onClick(DialogInterface dialog, int which) {
 					if (T) Log.v(TAG, M()+"@in: dialog="+dialog+", which="+which);
 
-					Intent intent2 = new Intent(Intent.ACTION_OPEN_DOCUMENT_TREE);
-					// String path = Environment.getExternalStorageDirectory().getPath() + "/mxdrv/";
-					// mdxRootUri = ActivitySelectMdxFile.getUriFromString("file://"+path);
-					// intent2.putExtra(DocumentsContract.EXTRA_INITIAL_URI, mdxRootUri);
-					startActivityForResult(intent2, ACTION_OPEN_DOCUMENT_TREE);
+					DialogSelectMxdrvDocumentTree();
 
 					if (T) Log.v(TAG, M()+"@out");
 				}
@@ -165,8 +156,6 @@ public class ActivityMain extends AppCompatActivity {
 		getWindow().requestFeature(Window.FEATURE_ACTION_BAR);
 		setTitle(R.string.activitymain_title);
 
-		iMusicPlayerService = null;
-
 		layout = new Layout(ActivityMain.this);
 		doMain = new DoMain(ActivityMain.this);
 		Setting.setContext(ActivityMain.this);
@@ -185,11 +174,11 @@ public class ActivityMain extends AppCompatActivity {
 
 		final Intent intent = getIntent();
 		if (intent != null) {
-			mStartIntent = intent;
+			doMain.setStartIntent(intent);
 		}
 
 		if (Setting.mdxRootUri == null) {
-			dialogSelectMxdrvDocumentTree();
+			DialogPreSelectMxdrvDocumentTree();
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -218,7 +207,7 @@ public class ActivityMain extends AppCompatActivity {
 
 		super.onNewIntent(intent);
 
-		mStartIntent = intent;
+		doMain.setStartIntent(intent);
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -232,14 +221,6 @@ public class ActivityMain extends AppCompatActivity {
 		if (T) Log.v(TAG, M()+"@in");
 
 		super.onStart();
-
-		if (T) Log.v(TAG, M()+"@out");
-	}
-
-	private void afterSetupService() {
-		if (T) Log.v(TAG, M()+"@in");
-
-		layout.musicInfoLayout_Update();
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -259,7 +240,7 @@ public class ActivityMain extends AppCompatActivity {
 			return;
 		}
 
-		resume_iMusicPlayerService();
+		doMain.doResumeMusicPlayerService();
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -279,14 +260,7 @@ public class ActivityMain extends AppCompatActivity {
 			return;
 		}
 
-		try {
-			resume_iMusicPlayerService();
-			if (iMusicPlayerService != null) {
-				iMusicPlayerService.savePlayerStatus();
-			}
-		} catch (final RemoteException e) {
-			e.printStackTrace();
-		}
+		doMain.doSavePlayerService();
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -308,17 +282,7 @@ public class ActivityMain extends AppCompatActivity {
 
 		if (mShutdownServiceOnDestroy) {
 			mShutdownServiceOnDestroy = false;
-			unregisterReceiver(mReceiver);
-			try {
-				resume_iMusicPlayerService();
-				if (iMusicPlayerService != null) {
-					iMusicPlayerService.shutdown();
-				}
-			}
-			catch(final RemoteException e) {
-				e.printStackTrace();
-			}
-			unbindService(svcMusicPlayer);
+			doMain.doUnbindPlayerService();
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -407,216 +371,6 @@ public class ActivityMain extends AppCompatActivity {
 		if (T) Log.v(TAG, M()+"@out");
 	}
 
-	/**
-	 * 音楽プレイヤーサービスへのバインド
-	 */
-	private void myBindService() {
-		if (T) Log.v(TAG, M()+"@in");
-
-		final Intent i1 = new Intent(this, MusicPlayerService.class);
-		startService(i1);
-		final Intent i2 = new Intent(IMusicPlayerService.class.getName());
-		final String pkgname = me.getPackageName();
-		i2.setPackage(pkgname);
-		bindService(i2, svcMusicPlayer, BIND_AUTO_CREATE);
-
-		if (T) Log.v(TAG, M()+"@out");
-	}
-
-	/**
-	 * 音楽プレイヤーサービスのAPI取得処理
-	 */
-	private final ServiceConnection svcMusicPlayer = new ServiceConnection() {
-		@Override
-		public void onServiceConnected(final ComponentName name, final IBinder service) {
-			if (T) Log.v(TAG, M()+"@in: service="+service);
-
-			final IMusicPlayerService i = IMusicPlayerService.Stub.asInterface(service);
-			if (V) Log.v(TAG, M()+"iMusicPlayerService loaded");
-			iMusicPlayerService = i;
-
-			if (T) Log.v(TAG, M()+"@out");
-		}
-		@Override
-		public void onServiceDisconnected(final ComponentName name) {
-			if (T) Log.v(TAG, M()+"@in: name="+name);
-
-			iMusicPlayerService = null;
-
-			if (T) Log.v(TAG, M()+"@out");
-		}
-	};
-
-	/**
-	 * 音楽プレイヤーサービスのブロードキャストレシーバー登録
-	 */
-	private void myRegisterReceiver() {
-		if (T) Log.v(TAG, M()+"@in");
-
-		final IntentFilter filter = new IntentFilter(MusicPlayerService.ACTION);
-		registerReceiver(mReceiver, filter);
-
-		if (T) Log.v(TAG, M()+"@out");
-	}
-
-	/**
-	 * 音楽プレイヤーサービスからのブロードキャスト受信処理
-	 */
-	public class MusicPlayerServiceReceiver extends BroadcastReceiver {
-		@Override
-		public synchronized void onReceive(final Context context, final Intent intent) {
-			// if (T) Log.v(TAG, M()+"@in: context="+context+", intent="+intent);
-
-			final Bundle extras = intent.getExtras();
-			final int msg = extras.getInt("msg");
-			switch (msg) {
-				case MusicPlayerService.TIMER_IRQ:
-				{
-					layout.musicInfoLayout_UpdateTimer();
-					break;
-				}
-
-				case MusicPlayerService.ACCEPT_MUSIC_FILE:
-				{
-					layout.musicInfoLayout_Update();
-					break;
-				}
-
-				case MusicPlayerService.END_PLAY:
-				{
-					break;
-				}
-
-				default:
-				{
-					if (V) Log.v(TAG, M()+"unknown message: " + msg);
-					break;
-				}
-			}
-
-			// if (T) Log.v(TAG, M()+"@out");
-		}
-	}
-
-	/**
-	 * iMusicPlayerServiceの再読み込み
-	 */
-	public void resume_iMusicPlayerService() {
-		if (T) Log.v(TAG, M()+"@in");
-
-		final ProgressDialog pd = new ProgressDialog(me);
-		final Handler h = new Handler();
-		final Runnable[] setupService = new Runnable[1];
-		final Runnable dismissProgressDialog = new Runnable() {
-			@Override
-			public void run() {
-				if (T) Log.v(TAG, M()+"@in");
-				pd.dismiss();
-
-				if (mStartIntent != null) {
-					onMyNewIntent(mStartIntent);
-					mStartIntent = null;
-				}
-
-				if (T) Log.v(TAG, M()+"@out");
-			}
-		};
-		final Runnable postSetupService = new Runnable() {
-			@Override
-			public void run() {
-				if (T) Log.v(TAG, M()+"@in");
-
-				afterSetupService();
-				h.post(dismissProgressDialog);
-
-				if (T) Log.v(TAG, M()+"@out");
-			}
-		};
-		final Runnable waitSetupService = new Runnable() {
-			@Override
-			public void run() {
-				if (T) Log.v(TAG, M()+"@in");
-
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						if (T) Log.v(TAG, M()+"@in");
-
-						int count;
-						for (count=0; count<100; count++) {
-							if (iMusicPlayerService != null) break;
-							try {
-								Thread.sleep(200);
-								// mSignaliIRCServiceSetup.await();
-							} catch (final InterruptedException e) {
-								//
-							}
-						}
-						if (count >= 100) {
-							h.post(setupService[0]);
-						} else {
-							h.post(postSetupService);
-						}
-
-						if (T) Log.v(TAG, M()+"@out");
-					}
-				} ).start();
-
-				if (T) Log.v(TAG, M()+"@out");
-			}
-		};
-		setupService[0] = new Runnable() {
-			@Override
-			public void run() {
-				if (T) Log.v(TAG, M()+"@in");
-
-				myBindService();
-				myRegisterReceiver();
-				h.post(waitSetupService);
-
-				if (T) Log.v(TAG, M()+"@out");
-			}
-		};
-		final Runnable showProgressDialog = new Runnable() {
-			@Override
-			public void run() {
-				if (T) Log.v(TAG, M()+"@in");
-
-				pd.setTitle(getString(R.string.activitymain_java_progress_bindservice));
-				pd.setIndeterminate(true);
-				pd.setCancelable(false);
-				pd.show();
-				h.post(setupService[0]);
-
-				if (T) Log.v(TAG, M()+"@out");
-			}
-		};
-		if (iMusicPlayerService != null) {
-			try {
-				// サービス生存確認
-				if (V) Log.v(TAG, M()+"check Service");
-				final String packageName = getPackageName();
-				final PackageInfo packageInfo = getPackageManager().getPackageInfo(packageName, PackageManager.GET_META_DATA);
-				final String version = packageInfo.versionName;
-				final String serviceVersion = iMusicPlayerService.getVersionString();
-				if (version.equals(serviceVersion)) {
-					afterSetupService();
-					return;
-				}
-				iMusicPlayerService = null;
-			} catch (final Exception e) {
-				iMusicPlayerService = null;
-			}
-		} else {
-			if (V) Log.v(TAG, M()+"service is not alive");
-		}
-		h.post(showProgressDialog);
-
-		if (T) Log.v(TAG, M()+"@out");
-	}
-
-
-
 	/*
 	 * オプションメニュー作成
 	 * @see android.app.Activity#onCreateOptionsMenu(android.view.Menu)
@@ -699,32 +453,17 @@ public class ActivityMain extends AppCompatActivity {
 				if (V) Log.v(TAG, M()+"ACTIVITY_SETTING");
 				if (intentResult >= 0) {
 					Setting.load();
+					final int rebootlevel = extras.getInt("rebootlevel");
+					if ((rebootlevel & 2) == 2) {
+						doMain.doRebootMusicPlayerService();
+					}
 				}
 				break;
 
 			case ACTIVITY_SELECT_MDX:
 				if (V) Log.v(TAG, M()+"ACTIVITY_SELECT_MDX");
 				if (extras != null) {
-					final Uri uri = ActivitySelectMdxFile.getUriFromString(extras.getString("uri"));
-					final int nselect = extras.getInt("nselect");
-					final int nuris = extras.getInt("nuris");
-					final String[] playlist = new String[nuris];
-					for (int i=0; i<nuris; i++) {
-						playlist[i] = extras.getString("uri_"+i);
-					}
-					try {
-						iMusicPlayerService.setPlayList(playlist);
-						iMusicPlayerService.setPlayNumber(nselect);
-						iMusicPlayerService.setPlay(true);
-						/*
-						iMusicPlayerService.playMusicFile(path);
-						 */
-						String uristr = ActivitySelectMdxFile.getStringFromUri(uri);
-						iMusicPlayerService.setLastSelectedFileName(uristr);
-						iMusicPlayerService.savePlayerStatus();
-					} catch (final RemoteException e) {
-						e.printStackTrace();
-					}
+					doMain.onSelectMdxFile(extras);
 				}
 				break;
 
@@ -755,7 +494,7 @@ public class ActivityMain extends AppCompatActivity {
 				break;
 		}
 
-		resume_iMusicPlayerService();
+		doMain.doResumeMusicPlayerService();
 
 		if (T) Log.v(TAG, M()+"@out");
 	}

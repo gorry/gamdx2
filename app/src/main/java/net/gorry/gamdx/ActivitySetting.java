@@ -8,8 +8,10 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ActivityInfo;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.util.Log;
 import android.view.KeyEvent;
 
@@ -18,12 +20,12 @@ import android.view.KeyEvent;
  *
  */
 public class ActivitySetting extends PreferenceActivity {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "ActivitySetting";
-	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -79,6 +81,9 @@ public class ActivitySetting extends PreferenceActivity {
 		Setting.clearForPreferenceActivity(sp);
 		Setting.setForPreferenceActivity(sp);
 		addPreferencesFromResource(pref);
+
+		PreferenceScreen preferenceScreen = (PreferenceScreen) findPreference("pref_mdxrooturi");
+		preferenceScreen.setOnPreferenceClickListener(OnPreferenceClickMdxRootUri);
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -206,6 +211,19 @@ public class ActivitySetting extends PreferenceActivity {
 		if (T) Log.v(TAG, M()+"@out");
 		return false;
 	}
+
+	private Preference.OnPreferenceClickListener OnPreferenceClickMdxRootUri = new Preference.OnPreferenceClickListener() {
+		@Override
+		public boolean onPreferenceClick(Preference preference) {
+			if (T) Log.v(TAG, M()+"@in");
+
+			ActivityMain.Instance().DialogSelectMxdrvDocumentTree();
+
+			if (T) Log.v(TAG, M()+"@out");
+			return false;
+		}
+
+	};
 
 }
 

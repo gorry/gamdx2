@@ -11,19 +11,18 @@ import android.util.Log;
 import androidx.documentfile.provider.DocumentFile;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * @author gorry
  *
  */
 public class MusicPlayer {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "MusicPlayer";
-	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -120,6 +119,9 @@ public class MusicPlayer {
 		mPlayNumber = pref.getInt("PlayNumber", 0);
 		String uristr = pref.getString("LastSelectedFileName", "");
 		mLastSelectedFileUri = ActivitySelectMdxFile.getUriFromString(uristr);
+		if ((0 <= mPlayNumber) && (mPlayNumber < mPlayList.length)) {
+			setPlayNumber(mPlayNumber);
+		}
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -261,7 +263,7 @@ public class MusicPlayer {
 					mListeners.get(i).acceptMusicFile();
 				}
 				if (T) Log.v(TAG, M()+"@out: true");
-			return true;
+				return true;
 			}
 		}
 

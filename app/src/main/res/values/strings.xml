@@ -43,6 +43,7 @@
 	<string name="title_open_document_tree_mxdrv_folder">Select MXDRV folder</string>
 	<string name="title_request_permission_notification">Request Permission</string>
 	<string name="msg_request_permission_notification">This app requires [Notification] permission.</string>
+	<string name="activitymain_java_progress_rebootservice">Reboot MXDRVG Service...</string>
 
 
 

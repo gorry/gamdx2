@@ -22,12 +22,12 @@ import android.widget.TextView;
  *
  */
 public class Layout {
-	private static final boolean RELEASE = false;//true;
+	private static final boolean RELEASE = !BuildConfig.DEBUG;
 	private static final String TAG = "Layout";
-	private static final boolean T = true; //false;
-	private static final boolean V = false;
-	private static final boolean D = false;
-	private static final boolean I = !RELEASE;
+	private static final boolean T = !RELEASE;
+	private static final boolean V = !RELEASE;
+	private static final boolean D = !RELEASE;
+	private static final boolean I = true;
 
 	private static String M() {
 		StackTraceElement[] es = new Exception().getStackTrace();
@@ -37,7 +37,7 @@ public class Layout {
 
 	private static final int WC = ViewGroup.LayoutParams.WRAP_CONTENT;
 	private static final int FP = ViewGroup.LayoutParams.FILL_PARENT;
-	private final ActivityMain me;
+	private final ActivityMain main;
 
 	@SuppressWarnings("unused")
 	private int mBaseLayoutWidth;
@@ -58,7 +58,7 @@ public class Layout {
 	Layout(final ActivityMain a) {
 		if (T) Log.v(TAG, M()+"@in: a="+a);
 
-		me = a;
+		main = a;
 
 		if (T) Log.v(TAG, M()+"@out");
 	}
@@ -94,7 +94,7 @@ public class Layout {
 		if (T) Log.v(TAG, M()+"@in: isFirst="+isFirst);
 
 		final boolean lastOrientation = Setting.getOrientation();
-		final boolean isLandscape = (me.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
+		final boolean isLandscape = (main.getResources().getConfiguration().orientation == Configuration.ORIENTATION_LANDSCAPE);
 		switch (Setting.rotateMode) {
 			case 0:  // 常に画面の向きに合わせる
 				Setting.setOrientation(isLandscape);
@@ -128,20 +128,20 @@ public class Layout {
 		switch (Setting.rotateMode) {
 			default:
 			case 0:
-				me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
+				main.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED);
 				break;
 			case 1:
 				if (isLandscape) {
-					me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+					main.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 				} else {
-					me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+					main.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 				}
 				break;
 			case 2:
-				me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+				main.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
 				break;
 			case 3:
-				me.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+				main.setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
 				break;
 		}
 
@@ -167,7 +167,7 @@ public class Layout {
 		if (mBaseLayout != null) {
 			mBaseLayout.removeAllViews();
 		} else {
-			mBaseLayout = new LinearLayout(me) {
+			mBaseLayout = new LinearLayout(main) {
 				@Override
 				protected void onSizeChanged(final int w, final int h, final int oldw, final int oldh) {
 					if (V) Log.v(TAG, "onSizeChanged() baseLayout");
@@ -196,9 +196,6 @@ public class Layout {
 			setRotateMode();
 			baseLayout_Create(false);
 			musicInfoLayout_Update();
-			if (ActivityMain.iMusicPlayerService != null) {
-				//
-			}
 		}
 		mBaseLayout.requestLayout();
 
@@ -215,9 +212,6 @@ public class Layout {
 		if (isChanged || (Setting.rotateMode == 0)) {
 			setRotateMode();
 			baseLayout_Create(false);
-			if (ActivityMain.iMusicPlayerService != null) {
-				//
-			}
 		}
 
 		if (T) Log.v(TAG, M()+"@out");
@@ -241,32 +235,32 @@ public class Layout {
 	public void musicInfoLayout_Create(final LinearLayout baseLayout, final boolean isFirst) {
 		if (T) Log.v(TAG, M()+"@in: baseLayout="+baseLayout+", isFirst="+isFirst);
 
-		mMusicInfoLayout = new LinearLayout(me);
+		mMusicInfoLayout = new LinearLayout(main);
 		mMusicInfoLayout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
 		mMusicInfoLayout.setOrientation(LinearLayout.VERTICAL);
 		baseLayout.addView(mMusicInfoLayout);
 
-		mTitleText = new TextView(me);
+		mTitleText = new TextView(main);
 		mTitleText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mTitleText);
 
-		mDurationText = new TextView(me);
+		mDurationText = new TextView(main);
 		mDurationText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mDurationText);
 
-		mPlayTimeText = new TextView(me);
+		mPlayTimeText = new TextView(main);
 		mPlayTimeText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mPlayTimeText);
 
-		mFileTypeText = new TextView(me);
+		mFileTypeText = new TextView(main);
 		mFileTypeText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mFileTypeText);
 
-		mMainFileText = new TextView(me);
+		mMainFileText = new TextView(main);
 		mMainFileText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mMainFileText);
 
-		mSubFileText = new TextView(me);
+		mSubFileText = new TextView(main);
 		mSubFileText.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mMusicInfoLayout.addView(mSubFileText);
 
@@ -291,52 +285,52 @@ public class Layout {
 	public void musicPlayerUILayout_Create(final LinearLayout baseLayout, final boolean isFirst) {
 		if (T) Log.v(TAG, M()+"@in: baseLayout="+baseLayout+", isFirst="+isFirst);
 
-		mMusicPlayerUILayout = new LinearLayout(me);
+		mMusicPlayerUILayout = new LinearLayout(main);
 		mMusicPlayerUILayout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
 		mMusicPlayerUILayout.setOrientation(LinearLayout.VERTICAL);
 		baseLayout.addView(mMusicPlayerUILayout);
 
-		mButtons1Layout = new LinearLayout(me);
+		mButtons1Layout = new LinearLayout(main);
 		mButtons1Layout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
 		mButtons1Layout.setOrientation(LinearLayout.HORIZONTAL);
 		mMusicPlayerUILayout.addView(mButtons1Layout);
 
-		mOpenButton = new Button(me);
+		mOpenButton = new Button(main);
 		mOpenButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mOpenButton.setText(R.string.layout_java_openbutton_text);
 		mOpenButton.setOnClickListener(OnClickOpenButton);
 		mButtons1Layout.addView(mOpenButton);
 
-		mShutdownButton = new Button(me);
+		mShutdownButton = new Button(main);
 		mShutdownButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mShutdownButton.setText(R.string.layout_java_shutdownbutton_text);
 		mShutdownButton.setOnClickListener(OnClickShutdownButton);
 		mButtons1Layout.addView(mShutdownButton);
 
-		mButtons2Layout = new LinearLayout(me);
+		mButtons2Layout = new LinearLayout(main);
 		mButtons2Layout.setLayoutParams(new LinearLayout.LayoutParams(WC, WC));
 		mButtons2Layout.setOrientation(LinearLayout.HORIZONTAL);
 		mMusicPlayerUILayout.addView(mButtons2Layout);
 
-		mPlayButton = new Button(me);
+		mPlayButton = new Button(main);
 		mPlayButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mPlayButton.setText(R.string.layout_java_playbutton_text);
 		mPlayButton.setOnClickListener(OnClickPlayButton);
 		mButtons2Layout.addView(mPlayButton);
 
-		mStopButton = new Button(me);
+		mStopButton = new Button(main);
 		mStopButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mStopButton.setText(R.string.layout_java_stopbutton_text);
 		mStopButton.setOnClickListener(OnClickStopButton);
 		mButtons2Layout.addView(mStopButton);
 
-		mPrevButton = new Button(me);
+		mPrevButton = new Button(main);
 		mPrevButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mPrevButton.setText(R.string.layout_java_prevbutton_text);
 		mPrevButton.setOnClickListener(OnClickPrevButton);
 		mButtons2Layout.addView(mPrevButton);
 
-		mNextButton = new Button(me);
+		mNextButton = new Button(main);
 		mNextButton.setLayoutParams(new LinearLayout.LayoutParams(FP, WC));
 		mNextButton.setText(R.string.layout_java_nextbutton_text);
 		mNextButton.setOnClickListener(OnClickNextButton);
@@ -411,7 +405,7 @@ public class Layout {
 	public void musicInfoLayout_Update() {
 		if (T) Log.v(TAG, M()+"@in");
 
-		IMusicPlayerService sv = ActivityMain.iMusicPlayerService;
+		IMusicPlayerService sv = main.getMusicPlayerService();
 		if (sv == null) {
 			if (T) Log.v(TAG, M()+"@out: iMusicPlayerService == null");
 			return;
@@ -503,14 +497,15 @@ public class Layout {
 	public void musicInfoLayout_UpdateTimer() {
 		// if (T) Log.v(TAG, M()+"@in");
 
-		if (ActivityMain.iMusicPlayerService == null) {
+		IMusicPlayerService sv = main.getMusicPlayerService();
+		if (sv == null) {
 			return;
 		}
 
 		{
 			int n = 0;
 			try {
-				n = ActivityMain.iMusicPlayerService.getPlayAt();
+				n = sv.getPlayAt();
 			} catch (final RemoteException e) {
 				// TODO 自動生成された catch ブロック
 				e.printStackTrace();
