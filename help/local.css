@@ -1,0 +1,74 @@
+<style>
+<!--
+/* ===================================================================== */
+/* GNS digest専用css                                                     */
+/* ===================================================================== */
+
+body {
+	color:#000080;
+	background:#d0e0f0;
+}
+
+div.title {
+	background-color: #f0ffff;
+}
+
+h2 {
+	background-color: #f0ffff;
+}
+
+h2.noclear {
+	background-color: #f0ffff;
+}
+
+a:link {
+	/* 未訪リンク */
+	color:#008000;
+}
+a:visited {
+	/* 既訪リンク */
+	color:#ff8080;
+}
+a:hover {
+	/* ホバー状態リンク */
+	color:#ff40c0;
+}
+a:active {
+	/* クリック中リンク */
+	color:#ff00ff;
+	background-color:#ffffff;
+}
+
+p.mailtobox {
+	/* メール行 */
+	margin: 1em 0 1em 0;
+	background-color: #f0ffff;
+}
+
+div.shortcut font {
+	/* ショートカットジャンプ */
+	font-size: 65%;
+	line-height:120%;
+	vertical-align:100%;
+	text-decoration: none;
+}
+
+.item dt {
+	border-color: #006600;
+	background-color: #f0ffff;
+}
+
+div.rightpicture {
+	background-color: #d0e0f0;
+}
+
+div.fyi div.rightpicture {
+	background-color: #dfd;
+}
+
+div.twitter {
+	float: right;
+}
+
+-->
+</style>

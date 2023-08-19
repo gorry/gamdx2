@@ -1,0 +1,135 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Last-modified" content="<!--#echo var='LAST_MODIFIED'-->">
+<LINK REV=MADE HREF="mailto:gorry@hauN.org">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Content-Language" CONTENT="ja">
+<LINK REL="stylesheet" TYPE="text/css" HREF="basic.css">
+<LINK REL="stylesheet" TYPE="text/css" HREF="local.css">
+<TITLE>操作方法 - GAMDX</TITLE>
+</HEAD>
+<BODY BGCOLOR="#D0E0F0" TEXT="#000080" LINK="#008000" VLINK="#FF8080" ALINK="#FF40C0">
+<DIV ALIGN="center" class="titleframe">
+<DIV ALIGN="center" class="title">
+<BIG class="big_title"><B>操作方法 - GAMDX</B></BIG><BR>
+</DIV>
+</DIV>
+
+<DIV class="shortcut">
+<A HREF="index.html">[ヘルプトップ]</A>
+<A HREF="http://GORRY.hauN.org/android/gamdx/">[GAMDX配布ページ]</A>
+</DIV>
+
+<HR>
+<!-------------------------------------------------------------------------------------------->
+
+<DIV class="pagebody">
+
+<DIV class="rightpicture"><IMG src="pic/player.png"><BR>GAMDXのプレイヤー画面</DIV>
+
+<P>Androidアプリメニュー画面からGAMDXのアイコンをクリックすると、GAMDXが起動します。</P>
+
+
+
+
+<H2 id="files">ファイルの準備</H2>
+
+<DIV class="rightpicture"><IMG src="pic/mdxrootpath.png"><BR>MDXルートパス</DIV>
+
+<P>演奏するMDXやPDXなどのMXDRVファイル群は、あらかじめ端末内ストレージやSDカードなどにコピーしておく必要があります。</P>
+<P>GAMDXは、任意のフォルダのファイルを演奏することができますが、以下のことを覚えておくとファイルをより便利に扱うことができます。</P>
+
+<UL>
+<LI>初期設定では、「SDカードなどの"/mxdrv/"」がMDXルートパスとなります。
+<LI>PDXファイルは「MDXファイルと同じフォルダ」「MDXルートパスの"pdx/"サブフォルダ」の順で検索します。
+<LI>MDXルートパスは、初回の起動時に指定します。また環境設定の<SPAN class="ctrl">[MDXルートパス]</SPAN>で変更することができます。
+</UL>
+
+
+
+
+<H2 id="firstboot">最初の起動</H2>
+
+<DIV class="rightpicture"><IMG src="pic/gamdx_boot_notify_perm.png"><BR>通知の許可</DIV>
+
+<P>GAMDXを最初に起動したとき、まず２つの作業を行う必要があります。</P>
+<P>１つめは、「通知の許可」を出す必要があります。指示に従い、許可を出してください。</P>
+
+<BR clear="all">
+
+<P>２つめは、先ほど準備したMXDRVファイル群を収めた「MDXルートパス」へのアクセス許可を出す必要があります。指示に従い、フォルダを指定してください。</P>
+
+<DIV class="centerpicture"><IMG src="pic/gamdx_boot_mxdrv_folder_1.png"> <IMG src="pic/gamdx_boot_mxdrv_folder_2.png"><BR>MXDRVフォルダへのアクセス許可</DIV>
+
+<P>これらは、GAMDXをアンインストールするまで記憶されます。また「MDXルートパス」は環境設定で変更することができます。</P>
+
+
+
+
+<H2 id="mainscreen">プレイヤーのメイン画面</H2>
+
+<DIV class="rightpicture"><IMG src="pic/player.png"><BR>GAMDXのプレイヤー画面</DIV>
+
+<P>起動が終了すると、プレイヤーのメイン画面が開きます。</P>
+<P>その後のGAMDXの操作は、画面上のボタンと、<SPAN class="ctrl">[Menu]ボタン</SPAN>を押すと表示されるメインメニューで行います。</P>
+
+
+
+
+<H2 id="open">ファイルを開く</H2>
+
+<DIV class="rightpicture"><IMG src="pic/filer.png"><BR>MDXファイルを開く</DIV>
+<P>プレイヤー画面の<SPAN class="ctrl">[ファイルを開く]ボタン</SPAN>をタップすると、一覧からMDXファイルを探して開くことができます。</P>
+<P>MDXファイルをタップすると、演奏を開始します。指定した曲の演奏が終了すると、一覧の次の曲の演奏を開始します。</P>
+<P>曲が演奏中のときにホームボタンやBackボタンなどを押すと、GAMDXはバックグラウンドへ下がりますが、演奏は継続します。演奏を完全に終了するには、プレイヤー画面の<SPAN class="ctrl">[終了]ボタン</SPAN>をタップします。</P>
+
+
+
+
+<H2 id="control">プレイヤーの操作</H2>
+
+<P>プレイヤー画面には、<SPAN class="ctrl">[ファイルを開く]</SPAN>以外にもいくつかのボタンがあります。</P>
+
+<TABLE border="1">
+<TR>
+<TH>ファイルを開く</TH>
+<TD>MDXファイルを指定して、演奏を開始します。</TD>
+</TR>
+<TR>
+<TH>終了</TH>
+<TD>演奏を停止し、GAMDXを完全に終了します。</TD>
+</TR>
+<TR>
+<TH>再生</TH>
+<TD>演奏を開始します。</TD>
+</TR>
+<TR>
+<TH>停止</TH>
+<TD>演奏を停止します。</TD>
+</TR>
+<TR>
+<TH>前</TH>
+<TD>ひとつ前の曲を演奏します。</TD>
+</TR>
+<TR>
+<TH>次</TH>
+<TD>次の曲を演奏します。</TD>
+</TR>
+</TABLE>
+
+
+
+
+</DIV>
+
+<HR>
+<!-------------------------------------------------------------------------------------------->
+
+<DIV class="shortcut">
+<A HREF="index.html">[ヘルプトップ]</A>
+<A HREF="http://GORRY.hauN.org/android/gamdx/">[GAMDX配布ページ]</A>
+</DIV>
+
+</BODY>
+</HTML>

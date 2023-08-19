@@ -1,0 +1,214 @@
+<!DOCTYPE HTML>
+<HTML>
+<HEAD>
+<META HTTP-EQUIV="Last-modified" content="<!--#echo var='LAST_MODIFIED'-->">
+<LINK REV=MADE HREF="mailto:gorry@hauN.org">
+<META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=UTF-8">
+<META HTTP-EQUIV="Content-Language" CONTENT="ja">
+<LINK REL="stylesheet" TYPE="text/css" HREF="basic.css">
+<LINK REL="stylesheet" TYPE="text/css" HREF="local.css">
+<TITLE>ヘルプ - GAMDX - Android MXDRV Player</TITLE>
+</HEAD>
+<BODY BGCOLOR="#D0E0F0" TEXT="#000080" LINK="#008000" VLINK="#FF8080" ALINK="#FF40C0">
+<DIV ALIGN="center" class="titleframe">
+<DIV ALIGN="center" class="title">
+<BIG class="big_title"><B>ヘルプ - GAMDX - Android MXDRV Player</B></BIG><BR>
+<SPAN class="x68spirit">...X680x0 spirit inside...</SPAN>
+</DIV>
+</DIV>
+
+<DIV class="twitter" align="right">
+<A HREF="http://twitter.com/gorry5">[Twitter: @gorry5]</A>
+<A HREF="http://twitter.com/search/%23GAMDX">[Hashtag: #GAMDX]</A>
+</DIV>
+
+<DIV class="shortcut">
+<A HREF="http://GORRY.hauN.org/android/gamdx/">[GAMDX配布ページ]</A>
+<A HREF="http://GORRY.hauN.org/diary/digestdiary.html">[日記]</A>
+</DIV>
+
+<HR>
+<!-------------------------------------------------------------------------------------------->
+
+<DIV class="pagebody">
+
+<DIV class="rightpicture"><IMG src="pic/gamdx_is01_small.png"><BR>GAMDX</DIV>
+
+<P>GAMDXをご利用いただき、ありがとうございます。本ページは、「GAMDX - Android MXDRV Player」のヘルプトップページとなります。</P>
+
+<H2 class="noclear" id="index">目次</H2>
+
+<TABLE border>
+
+<TR>
+<TH><A HREF="feature.html">特長</A></TH>
+<TD>GAMDXの特長を説明します。</TD>
+</TR>
+
+<TR>
+<TH><A HREF="boot.html">操作方法</A></TH>
+<TD>GAMDXの操作方法を説明します。</TD>
+</TR>
+
+<TR>
+<TH><A HREF="system.html">環境設定</A></TH>
+<TD>GAMDXの動作環境の設定方法を説明します。</TD>
+</TR>
+
+<TR>
+<TH><A HREF="faq.html">よくある質問</A></TH>
+<TD>GAMDXについてよくある質問をまとめたものです。</TD>
+</TR>
+
+<TR>
+<TH><A HREF="license.html">ライセンス</A></TH>
+<TD>GAMDXのライセンスについて説明します。</TD>
+</TR>
+
+</TABLE>
+
+
+
+
+<H2 class="noclear" id="comment">コメント</H2>
+
+<P>コメントを受け付けています。</P>
+
+<UL class="jump">
+<LI><A HREF="http://gorry.haun.org/pw/?gamdx_comment">「GAMDX - Android MXDRV Player」コメント欄</A>
+</UL>
+
+
+
+
+<H2 class="noclear" id="update">更新履歴</H2>
+
+<DL class="item">
+
+<DT>2012.1213.1</DT>
+<DD>
+<UL>
+
+<LI>内部の大きな変更により、GAMDX→GAMDX2にリネーム。
+<LI>64bit対応。
+<LI>MDXエンジンとして、MXDRVgベースのPortable mdx decoderを採用。
+<LI>FM音源エンジンとして、X68Soundを使うよう変更。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2012.1213.1</DT>
+<DD>
+<UL>
+
+<LI>デバッグONのままリリースしてしまったのを修正。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2012.1212.1</DT>
+<DD>
+<UL>
+
+<LI>OS4.4（KitKat）でMDXファイルの読み込みができなくなるのを修正。
+<LI>多少の最適化。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2012.0707.1</DT>
+<DD>
+<UL>
+
+<LI>環境設定に「発声バッファサイズ」を追加。適宜変更することで音の途切れを解消できることがある。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2012.0706.1</DT>
+<DD>
+<UL>
+
+<LI>mxdrvg_core.hのコンバートバグ修正。
+<LI>最新環境（SDK r20/NDK r8）でのビルド確認。
+<LI>Jelly Bean(Android4.1)での動作確認。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2011.0401.4</DT>
+<DD>
+<UL>
+
+<LI>ループ＆フェードアウトしない曲の場合、演奏後のギャップを飛ばしてしまっていたバグを修正。
+<LI>サービスが常駐していない状態でMDXファイルIntent付きの起動を行った場合、MDXファイルの読み込みが行われないバグを修正。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2011.0401.3</DT>
+<DD>
+<UL>
+
+<LI>[ファイルを開く]で、初期フォルダが存在していないときに異常終了するバグを修正。
+<LI>MIMEタイプ"audio/x-mxdrv"のIntent-Filterを実装し、対応アプリからのIntentでMDXファイルの演奏を開始できるようにした。
+
+</UL>
+
+</DD>
+
+
+
+
+<DT>2011.0401.1</DT>
+<DD>
+<UL>
+
+<LI>最初の版。
+
+</UL>
+
+</DD>
+
+
+
+
+</DIV>
+
+<HR>
+<!-------------------------------------------------------------------------------------------->
+<P class="mailtobox"><SPAN class="mailto">
+メールはこちらへ...[<A HREF="mailto:gorry@hauN.org">後藤浩昭 / Hiroaki GOTO / GORRY / gorry@hauN.org</A>]
+</SPAN></P>
+
+<DIV class="shortcut">
+<A HREF="http://GORRY.hauN.org/android/gamdx/">[GAMDX配布ページ]</A>
+<A HREF="http://GORRY.hauN.org/diary/digestdiary.html">[日記]</A>
+</DIV>
+
+</BODY>
+</HTML>
