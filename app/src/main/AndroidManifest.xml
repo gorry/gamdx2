@@ -31,7 +31,7 @@
 			android:launchMode="singleTask"
 			android:multiprocess="true"
 			android:persistent="false"
-			android:theme="@style/SplashTheme"
+			android:theme="@style/AppTheme"
 			android:exported="true"
 			>
 
