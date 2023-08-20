@@ -62,7 +62,9 @@ public class ActivityRequestPermission extends AppCompatActivity {
 	private void requestPostNotification() {
 		if (T) Log.v(TAG, M()+"@in");
 
-		if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+		if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU) {
+			bootActivityMain();
+		} else {
 			int perm = ContextCompat.checkSelfPermission(me, permission.POST_NOTIFICATIONS);
 			if (perm == PackageManager.PERMISSION_GRANTED) {
 				bootActivityMain();
